@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p>{{ message }}</p>
+{% if detail %}<p><code>{{ detail }}</code></p>{% endif %}
+<p><a href="{{ url_for('papers') }}">論文一覧へ戻る</a></p>
+{% endblock %}

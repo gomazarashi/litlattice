@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paper_link %}
+{% block title %}概要{% endblock %}
+{% block content %}
+<h1>概要</h1>
+<dl class="stats">
+  <div><dt>登録論文数</dt><dd><a href="{{ url_for('papers') }}">{{ paper_count }}</a></dd></div>
+  <div><dt>ライブラリ</dt><dd>{{ library_count }}</dd></div>
+  <div><dt>引用数</dt><dd>{{ citation_count }}</dd></div>
+</dl>
+<p class="note">
+  論文はライブラリに登録しなくてもデータベースに存在できます。
+  引用 <strong>A → B</strong> は「<em>論文 A が論文 B を引用している</em>」ことを表します。
+</p>
+
+<section aria-labelledby="most-cited">
+  <h2 id="most-cited">被引用数の多い論文</h2>
+  {% if most_cited %}
+    <table>
+      <thead><tr><th scope="col">論文</th><th scope="col" class="num">被引用数</th></tr></thead>
+      <tbody>
+        {% for paper, count in most_cited %}
+          <tr><td>{{ paper_link(paper) }}</td><td class="num">{{ count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">まだ引用が登録されていません。<code>llat citation add 引用元 引用先</code> で登録できます。</p>
+  {% endif %}
+</section>
+{% endblock %}

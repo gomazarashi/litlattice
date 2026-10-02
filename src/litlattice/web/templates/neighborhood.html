@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}周辺グラフ: {{ paper_label(seed) }}{% endblock %}
+{% block main_attrs %} class="wide"{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="{{ url_for('papers') }}">論文</a> / <a href="{{ url_for('paper_detail', paper_id=seed.id) }}">{{ paper_label(seed) }}</a> /</p>
+<h1>周辺グラフ: {{ paper_label(seed) }}</h1>
+<p class="note">保存済みの引用関係だけを表示し、外部と通信しません。新しい引用を探すには <a href="{{ url_for('paper_detail', paper_id=seed.id) }}">論文の詳細</a>から引用を探索するか、<code>llat expand</code> を使ってください。</p>
+<form method="get" action="{{ url_for('paper_graph', paper_id=seed.id) }}" class="graph-options">
+  <label for="depth">深さ</label>
+  <select id="depth" name="depth">
+    {% for d in depths %}<option value="{{ d }}"{% if d == depth %} selected{% endif %}>{{ d }}</option>{% endfor %}
+  </select>
+  {% set direction_labels = {"both": "両方", "references": "参考文献（この論文が引用）", "citations": "被引用（この論文を引用）"} %}
+  <label for="direction">方向</label>
+  <select id="direction" name="direction">
+    {% for d in directions %}<option value="{{ d.value }}"{% if d == direction %} selected{% endif %}>{{ direction_labels[d.value] }}</option>{% endfor %}
+  </select>
+  <button type="submit">表示</button>
+</form>
+{% include "_graph_view.html" %}
+{% endblock %}

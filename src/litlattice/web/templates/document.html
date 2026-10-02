@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from "_macros.html" import library_state, paper_link %}
+{% block title %}PDF: {{ inspection.document.path }}{% endblock %}
+{% block content %}
+{% set document = inspection.document %}
+<p class="breadcrumb"><a href="{{ url_for('documents') }}">PDF</a> /</p>
+<h1 class="doc-path"><code>{{ document.path }}</code></h1>
+
+{% set assessment_labels = {
+  "linked": "既存の論文に一致します",
+  "created": "新しい論文を作成できます",
+  "ambiguous": "候補が複数あるため、自動では決めません",
+  "unidentified": "識別子が見つからないため、手動での関連付けが必要です",
+} %}
+
+<dl class="meta">
+  <dt>ID</dt><dd><code>{{ document.id }}</code></dd>
+  <dt>状態</dt>
+  <dd>
+    {% if inspection.file_available %}
+      ファイルを利用できます
+    {% elif document.missing_since %}
+      <span class="muted">ファイルが見つかりません（scan で missing として記録済み）。</span>
+    {% else %}
+      <span class="muted">ファイルが見つかりません。</span>
+    {% endif %}
+  </dd>
+  <dt>関連付けられた論文</dt>
+  <dd>
+    {% if linked_paper %}
+      {% set paper = linked_paper %}
+      <ul class="plain">
+        <li class="doc-link-row">
+          <span>{{ paper_link(paper) }} {{ library_state(paper) }}</span>
+          <form method="post" action="{{ url_for('document_unlink', document_id=document.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="paper_id" value="{{ paper.id }}">
+            <button type="submit">関連付けを解除</button>
+          </form>
+        </li>
+      </ul>
+    {% else %}
+      <span class="muted">未関連付け</span>
+    {% endif %}
+  </dd>
+  {% if document.content_hash %}<dt>ハッシュ</dt><dd><code>{{ document.content_hash }}</code></dd>{% endif %}
+</dl>
+
+<section aria-labelledby="hints">
+  <h2 id="hints">PDF から抽出した識別子</h2>
+  {% if not inspection.file_available %}
+    <p class="muted">ファイルを確認できないため、抽出した識別子はありません。</p>
+  {% elif inspection.hints %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">由来</th>
+            <th scope="col">強さ</th>
+            <th scope="col">識別子</th>
+            <th scope="col">既存の論文</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for hint in inspection.hints %}
+          <tr>
+            <td><code>{{ hint.origin.value }}</code></td>
+            <td>{{ "強い" if hint.strong else "弱い" }}</td>
+            <td><code class="ident">{{ hint.scheme }}:{{ hint.normalized_value }}</code></td>
+            <td>
+              {% set paper = candidates_by_id.get(hint.paper_id) %}
+              {% if paper %}{{ paper_link(paper) }}{% else %}<span class="muted">なし</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">識別子は見つかりませんでした。</p>
+  {% endif %}
+  {% if inspection.assessment %}
+    <p class="assessment">自動同定の判定: <strong>{{ assessment_labels[inspection.assessment.value] }}</strong>
+      <code class="ident">{{ inspection.assessment.value }}</code></p>
+  {% endif %}
+</section>
+
+{% if not document.paper_id %}
+<section aria-labelledby="resolve">
+  <h2 id="resolve">論文への関連付け</h2>
+  <p class="note">関連付けてもライブラリには追加しません。PDF と論文のどちらも削除しません。候補の内容を確認してから選んでください。</p>
+
+  {% if inspection.candidates %}
+  <h3>候補の論文</h3>
+  <p class="hint">抽出した識別子を既に持つ論文です。</p>
+  <ul class="plain">
+    {% for candidate in inspection.candidates %}
+    <li class="doc-candidate">
+      <span class="related-main">{{ paper_link(candidate) }}
+        {% set pid = primary_identifier(candidate) %}{% if pid and candidate.title %}<code class="ident">{{ pid }}</code>{% endif %}
+        {{ library_state(candidate) }}
+      </span>
+      <form method="post" action="{{ url_for('document_link', document_id=document.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="paper_id" value="{{ candidate.id }}">
+        <button type="submit">この論文に関連付ける</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if importable_hints %}
+  <h3>識別子から取り込む</h3>
+  <p class="hint">まだ論文がない識別子です。OpenAlex から取り込んで、この PDF に関連付けます。</p>
+  <ul class="plain">
+    {% for hint in importable_hints %}
+    <li class="doc-candidate">
+      <span class="related-main"><code class="ident">{{ hint.scheme }}:{{ hint.normalized_value }}</code>
+        <span class="muted">（{{ hint.origin.value }}）</span></span>
+      <form method="post" action="{{ url_for('document_import', document_id=document.id) }}" data-busy-label="通信中…">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="scheme" value="{{ hint.scheme }}">
+        <input type="hidden" name="value" value="{{ hint.normalized_value }}">
+        <button type="submit">取り込んで関連付ける</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h3>識別子を指定して取り込む</h3>
+  <form method="post" action="{{ url_for('document_import', document_id=document.id) }}" class="action-form" data-busy-label="通信中…">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="scheme">識別子の種類</label>
+    <select id="scheme" name="scheme">
+      <option value="doi">DOI</option>
+      <option value="arxiv">arXiv ID</option>
+      <option value="openalex">OpenAlex ID</option>
+    </select>
+    <label for="value">識別子</label>
+    <input id="value" name="value" required>
+    <button type="submit">OpenAlex から取り込んで関連付ける</button>
+  </form>
+
+  <h3>タイトルから論文を探す</h3>
+  <p class="hint">検索は候補を示すだけで、自動では関連付けません。論文を作成したあと、その ID を下に入力してください。</p>
+  <p><a href="{{ url_for('paper_add') }}">論文を追加（タイトル検索）</a></p>
+
+  <h3>既存の論文 ID を指定して関連付ける</h3>
+  <form method="post" action="{{ url_for('document_link', document_id=document.id) }}" class="action-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="manual-paper-id">論文 ID（UUID）</label>
+    <input id="manual-paper-id" name="paper_id" required>
+    <button type="submit">関連付ける</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

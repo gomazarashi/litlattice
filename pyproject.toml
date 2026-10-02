@@ -1,0 +1,38 @@
+[project]
+name = "litlattice"
+version = "0.3.0"
+description = "A literature management system for organizing research papers and exploring citation graphs."
+readme = "README.md"
+requires-python = ">=3.12,!=3.14.1"
+dependencies = [
+    "alembic>=1.20.0",
+    "flask>=3.1.3",
+    "flask-wtf>=1.3,<2",
+    "networkx>=3.7,<4",
+    "pypdf>=6.19.0",
+    "sqlalchemy>=2,<3",
+    "typer>=0.27.2",
+]
+
+[project.scripts]
+llat = "litlattice.cli:main"
+litlattice = "litlattice.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.18,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = ["I", "UP", "B"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]

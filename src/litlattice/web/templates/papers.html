@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paper_link, library_state %}
+{% block title %}論文{% endblock %}
+{% block content %}
+<h1>論文 <span class="count">{{ papers|length }}</span></h1>
+<p class="note">データベース内のすべての論文です。ライブラリに登録していない論文も含みます。</p>
+<p><a href="{{ url_for('paper_add') }}">論文を追加</a></p>
+{% if papers %}
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th scope="col">タイトル</th>
+      <th scope="col">識別子</th>
+      <th scope="col">ライブラリ</th>
+      <th scope="col" class="num"><abbr title="この論文が引用している論文の数">引用 →</abbr></th>
+      <th scope="col" class="num"><abbr title="この論文を引用している論文の数">← 被引用</abbr></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for paper in papers %}
+    <tr>
+      <td>{{ paper_link(paper) }}</td>
+      <td>{% set pid = primary_identifier(paper) %}{% if pid %}<code class="ident">{{ pid }}</code>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td>{{ library_state(paper) }}</td>
+      <td class="num">{{ reference_counts[paper.id] }}</td>
+      <td class="num">{{ citation_counts[paper.id] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">まだ論文がありません。<code>llat paper create --title "…" --doi …</code> で作成できます。</p>
+{% endif %}
+{% endblock %}
