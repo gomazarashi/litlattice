@@ -1,4 +1,4 @@
-# ADR 0005: ローカルWeb UIとbrowserでのgraph描画
+# ADR 0004: ローカルWeb UIとbrowserでのgraph描画
 
 - Status: Accepted
 - Date: 2026-09-30

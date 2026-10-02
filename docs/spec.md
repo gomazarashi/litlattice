@@ -24,7 +24,7 @@ Sourceの削除はDocumentCopyや実ファイルを削除しない。パスは�
 
 ## 不変条件
 
-- 新規DBとschema変更はSQLAlchemyのモデルとAlembic migrationで管理する。旧開発版DBとの互換性はなく、作り直しが必要
+- 新規DBとschema変更はSQLAlchemyのモデルとAlembic migrationで管理する
 - Entity IDはUUID v4。運用日時はtimezone付きUTCとし、naive datetimeを保存しない
 - Paperの発見とLibrary登録は区別する。scan・import・fetch・expand・PDF関連付けでLibraryへ暗黙に登録せず、PDFも取得しない
 - 外部識別子の正規化後の完全一致で同定する。同じ外部識別子を複数Paperへ割り当てない。タイトル類似だけで自動統合しない
@@ -36,7 +36,7 @@ Sourceの削除はDocumentCopyや実ファイルを削除しない。パスは�
 
 ## Core / CLI / Webの責務
 
-Coreが同定、scan、取り込み、Library、引用、graph解析とDB transactionを担当する。結果はsession終了後も使えるデータとして返す。transaction境界は [ADR 0003](decisions/0003-core-transaction-boundary.md) に従う。
+Coreが同定、scan、取り込み、Library、引用、graph解析とDB transactionを担当する。結果はsession終了後も使えるデータとして返す。transaction境界は [ADR 0002](decisions/0002-core-transaction-boundary.md) に従う。
 
 CLIは初期化、Source、scan、Paper、Library、Citation、import/search/fetch/expand、graphとJSON自動化を提供する。JSONは共通serializerでCore結果を変換し、成功時はok・data・warnings、失敗時はok・error.type・error.messageを返す。stdoutへJSON以外を混ぜず、適切なexit codeを使う。v1.0以前は後方互換性を保証せず、独立schema versionは持たない。
 
@@ -46,4 +46,4 @@ Webは人間の日常操作（Paper閲覧、検索・取り込み、PDF解決、
 
 現在のProviderはOpenAlexのみ。PaperProviderはlookup_work・search_works・fetch_references・fetch_citationsをまとめる。ProviderWorkは通信結果であり、Paperの同定と永続化はCoreが行う。OpenAlex固有通信はOpenAlexClientに閉じ込め、通信中にwrite transactionを開かない。
 
-入力と共有する識別子がないrecordは適用しない。preprintと出版版の誤統合を避ける。詳細は [ADR 0004](decisions/0004-openalex-first-provider.md) と [利用ガイド](usage.md) を参照する。
+入力と共有する識別子がないrecordは適用しない。preprintと出版版の誤統合を避ける。詳細は [ADR 0003](decisions/0003-openalex-first-provider.md) と [利用ガイド](usage.md) を参照する。

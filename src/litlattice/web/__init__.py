@@ -1,6 +1,6 @@
 """Local web interface for LitLattice.
 
-A primary interface (ADR 0005) over the same Core use cases as the CLI. It
+A primary interface (ADR 0004) over the same Core use cases as the CLI. It
 listens on 127.0.0.1 and is not meant for external or production deployment.
 """
 

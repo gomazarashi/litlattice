@@ -1,6 +1,6 @@
 # Cytoscape.js（同梱）
 
-LitLatticeのWeb UIが引用グラフの描画に使う、Cytoscape.jsの配布ファイルである（ADR 0005）。外部CDNから読み込まず、package resourceとして同梱する。このディレクトリのファイルは編集しない。
+LitLatticeのWeb UIが引用グラフの描画に使う、Cytoscape.jsの配布ファイルである（ADR 0004）。外部CDNから読み込まず、package resourceとして同梱する。このディレクトリのファイルは編集しない。
 
 | 項目 | 値 |
 | --- | --- |
