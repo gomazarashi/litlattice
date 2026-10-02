@@ -2,4 +2,4 @@
 
 ## Next
 
-- [ ] 次のリリースの目的と範囲を決める
+- [ ] v0.1.0のリリース（develop → mainのリリースPR、annotated tag）
