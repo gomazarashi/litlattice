@@ -1,0 +1,71 @@
+{% from "_macros.html" import library_state, paper_link %}
+<section class="graph-view" aria-label="引用グラフ">
+  <div class="graph-toolbar" role="toolbar" aria-label="グラフの操作">
+    <label for="graph-filter">論文を探す</label>
+    <input id="graph-filter" type="search" placeholder="タイトル・識別子・ID" autocomplete="off">
+    <button type="button" data-graph-action="zoom-in" aria-label="拡大">＋</button>
+    <button type="button" data-graph-action="zoom-out" aria-label="縮小">－</button>
+    <button type="button" data-graph-action="fit">全体を表示</button>
+  </div>
+  <p id="graph-status" class="graph-status" role="status" aria-live="polite">読み込み中…</p>
+  <div id="graph-canvas" class="graph-canvas" data-graph-kind="{{ graph.kind.value }}" data-api-url="{{ api_url }}" data-paper-url-template="{{ url_for('paper_detail', paper_id='00000000-0000-0000-0000-000000000000') }}"{% if graph.seed_paper_id %} data-seed-id="{{ graph.seed_paper_id }}"{% endif %} aria-hidden="true"></div>
+  <noscript><p class="muted">グラフの表示には JavaScript が必要です。下の一覧で同じ内容を確認できます。</p></noscript>
+  <ul class="legend" aria-label="凡例">
+    <li><span class="legend-mark" aria-hidden="true">●</span> 塗りつぶし = ライブラリ登録済み</li>
+    <li><span class="legend-mark" aria-hidden="true">○</span> 点線の白抜き = ライブラリ未登録</li>
+    {% if graph.kind.value == "neighborhood" %}
+    <li><span class="legend-mark" aria-hidden="true">◆</span> ひし形 = 起点の論文</li>
+    {% endif %}
+    <li>矢印 <strong>A → B</strong> = A が B を引用</li>
+    {% if graph.kind.value == "neighborhood" %}
+    <li>左: この論文を引用している論文（被引用）／中央: この論文／右: この論文が引用している論文（参考文献）</li>
+    {% endif %}
+  </ul>
+  <details class="graph-lists">
+    <summary>一覧で見る（論文 {{ graph.nodes|length }} 件・引用 {{ graph.edges|length }} 件）</summary>
+    {% set papers_by_id = {} %}
+    {% for node in graph.nodes %}{% set _ = papers_by_id.update({node.paper.id: node.paper}) %}{% endfor %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            {% if graph.kind.value == "neighborhood" %}<th scope="col" class="num">距離</th>{% endif %}
+            <th scope="col">論文</th>
+            <th scope="col">ライブラリ</th>
+            <th scope="col" class="num">被引用（このグラフ内）</th>
+            <th scope="col" class="num">引用（このグラフ内）</th>
+            <th scope="col" class="num">PageRank</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for node in graph.nodes %}
+          <tr>
+            {% if graph.kind.value == "neighborhood" %}<td class="num">{{ node.distance }}</td>{% endif %}
+            <td>{{ paper_link(node.paper) }}</td>
+            <td>{{ library_state(node.paper) }}</td>
+            <td class="num">{{ node.in_degree }}</td>
+            <td class="num">{{ node.out_degree }}</td>
+            <td class="num">{{ "%.4f"|format(node.pagerank) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">引用元の論文</th><th scope="col">引用先の論文</th></tr></thead>
+        <tbody>
+          {% for edge in graph.edges %}
+          <tr>
+            <td>{{ paper_link(papers_by_id[edge.citing_paper_id]) }}</td>
+            <td>{{ paper_link(papers_by_id[edge.cited_paper_id]) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if not graph.edges %}<p class="muted">このグラフに引用はありません。</p>{% endif %}
+  </details>
+</section>
+<script src="{{ url_for('static', filename='vendor/cytoscape/cytoscape.min.js') }}"></script>
+<script src="{{ url_for('static', filename='graph.js') }}"></script>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paper_link %}
+{% block title %}PDF{% endblock %}
+{% block content %}
+<h1>PDF</h1>
+<p class="note">登録されている PDF（DocumentCopy）の一覧です。表示は scan の結果で、ファイルの移動やライブラリへの追加は行いません。</p>
+
+<p class="filter-links">
+  <a href="{{ url_for('documents') }}" {% if not unlinked %}aria-current="page"{% endif %}>すべて</a>
+  <a href="{{ url_for('documents', unlinked=1) }}" {% if unlinked %}aria-current="page"{% endif %}>未関連付けのみ</a>
+</p>
+
+{% if documents %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">パス</th>
+        <th scope="col">状態</th>
+        <th scope="col">関連付けられた論文</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in documents %}
+      <tr>
+        <td>
+          <a href="{{ url_for('document_detail', document_id=d.id) }}"><code>{{ d.path }}</code></a>
+        </td>
+        <td>{% if d.missing_since %}<span class="muted">見つかりません</span>{% else %}存在{% endif %}</td>
+        <td>
+          {% if d.paper_id %}
+            {% set paper = papers.get(d.paper_id) %}
+            {% if paper %}{{ paper_link(paper) }}{% else %}<code>{{ d.paper_id }}</code>{% endif %}
+          {% else %}
+            <span class="muted">未関連付け</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif unlinked %}
+<p class="muted">未関連付けの PDF はありません。</p>
+{% else %}
+<p class="muted">PDF が登録されていません。CLI で Source を登録して scan してください。</p>
+{% endif %}
+{% endblock %}

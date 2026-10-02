@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_macros.html" import library_state, related_list %}
+{% block title %}{{ paper_label(paper) }}{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="{{ url_for('papers') }}">論文</a> /</p>
+<h1>{% if paper.title %}{{ paper.title }}{% else %}<span class="muted">無題の論文</span>{% endif %}</h1>
+
+<dl class="meta">
+  <dt>ID</dt><dd><code>{{ paper.id }}</code></dd>
+  {% if paper.publication_year %}<dt>出版年</dt><dd>{{ paper.publication_year }}</dd>{% endif %}
+  <dt>識別子</dt>
+  <dd>
+    {% if paper.identifiers %}
+      <ul class="plain">
+        {% for i in paper.identifiers %}<li><code class="ident">{{ i.scheme }}:{{ i.normalized_value }}</code></li>{% endfor %}
+      </ul>
+    {% else %}<span class="muted">なし</span>{% endif %}
+  </dd>
+  <dt>PDF</dt>
+  <dd>
+    {% if documents %}
+      <ul class="plain">
+        {% for d in documents %}<li><a href="{{ url_for('document_detail', document_id=d.id) }}"><code>{{ d.path }}</code></a>{% if d.missing_since %} <span class="muted">（見つかりません）</span>{% endif %}</li>{% endfor %}
+      </ul>
+    {% else %}<span class="muted">なし</span>{% endif %}
+  </dd>
+  <dt>ライブラリ</dt>
+  <dd class="library-row">
+    {{ library_state(paper) }}
+    <form method="post" action="{{ url_for('change_library', paper_id=paper.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if paper.in_library %}
+        <button type="submit" name="action" value="remove">ライブラリから外す</button>
+      {% else %}
+        <button type="submit" name="action" value="add">ライブラリに追加</button>
+      {% endif %}
+    </form>
+  </dd>
+</dl>
+
+<p><a href="{{ url_for('paper_graph', paper_id=paper.id) }}">周辺グラフを見る</a></p>
+
+<section aria-labelledby="openalex">
+  <h2 id="openalex">OpenAlex</h2>
+  <p class="note">OpenAlex と通信します。数秒〜数十秒かかることがあります。取得・探索した論文はライブラリには追加しません。</p>
+  <div class="openalex-actions">
+    <form method="post" action="{{ url_for('paper_fetch', paper_id=paper.id) }}" class="action-form" data-busy-label="通信中…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">metadata を取得</button>
+    </form>
+    <form method="post" action="{{ url_for('paper_expand', paper_id=paper.id) }}" class="action-form" data-busy-label="通信中…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="depth">深さ</label>
+      <select id="depth" name="depth">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+      </select>
+      {% set direction_labels = {"both": "両方", "references": "参考文献（この論文が引用）", "citations": "被引用（この論文を引用）"} %}
+      <label for="direction">方向</label>
+      <select id="direction" name="direction">
+        {% for value, label in direction_labels.items() %}<option value="{{ value }}"{% if value == "both" %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <label for="max_nodes">上限</label>
+      <select id="max_nodes" name="max_nodes">
+        <option value="20">20</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+      <button type="submit">引用を探索（expand）</button>
+    </form>
+  </div>
+  <p class="muted" data-busy-status role="status"></p>
+</section>
+
+<div class="relations">
+  <section aria-labelledby="refs">
+    <h2 id="refs">参考文献 <span class="count">{{ references|length }}</span></h2>
+    <p class="hint">この論文が引用している論文（この論文 → 相手）</p>
+    {{ related_list(references, "→", "この論文が引用している論文は登録されていません。") }}
+  </section>
+  <section aria-labelledby="cited-by">
+    <h2 id="cited-by">被引用 <span class="count">{{ cited_by|length }}</span></h2>
+    <p class="hint">この論文を引用している論文（相手 → この論文）</p>
+    {{ related_list(cited_by, "←", "この論文を引用している論文は登録されていません。") }}
+  </section>
+</div>
+{% endblock %}

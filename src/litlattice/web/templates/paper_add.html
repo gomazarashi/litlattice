@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}論文を追加{% endblock %}
+{% block content %}
+<h1>論文を追加</h1>
+<p class="note">OpenAlex から論文を取り込みます。取り込んでもライブラリには追加しません。追加は論文の詳細ページで行います。</p>
+
+<section aria-labelledby="import-by-identifier">
+  <h2 id="import-by-identifier">識別子から取り込む</h2>
+  <form method="post" action="{{ url_for('paper_import') }}" class="action-form" data-busy-label="通信中…">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="scheme">識別子の種類</label>
+    <select id="scheme" name="scheme">
+      <option value="doi">DOI</option>
+      <option value="arxiv">arXiv ID</option>
+      <option value="openalex">OpenAlex ID</option>
+    </select>
+    <label for="value">識別子</label>
+    <input id="value" name="value" required>
+    <button type="submit">OpenAlex から取り込む</button>
+  </form>
+</section>
+
+<section aria-labelledby="search-by-title">
+  <h2 id="search-by-title">タイトルで探す</h2>
+  <form method="get" action="{{ url_for('paper_add') }}" class="action-form" data-busy-label="通信中…">
+    <label for="q">タイトル</label>
+    <input id="q" name="q" type="search" value="{{ query }}">
+    <button type="submit">OpenAlex で検索</button>
+  </form>
+  <p class="muted" data-busy-status role="status"></p>
+  <p class="note">検索は候補を示すだけで、何も保存しません。候補の「取り込む」を押したときだけ論文を作ります。</p>
+  {% if result %}
+    {% if result.candidates %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">状態</th>
+            <th scope="col">タイトル（出版年）</th>
+            <th scope="col">識別子</th>
+            <th scope="col">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set status_labels = {"new": "新規", "existing": "登録済み", "ambiguous": "複数に一致"} %}
+          {% for candidate in result.candidates %}
+          <tr>
+            <td>{{ status_labels[candidate.status.value] }}</td>
+            <td>
+              {% if candidate.title %}{{ candidate.title }}{% else %}<span class="muted">無題</span>{% endif %}
+              {% if candidate.publication_year is not none %}（{{ candidate.publication_year }}）{% endif %}
+            </td>
+            <td>
+              <ul class="plain">
+                {% for identifier in candidate.identifiers %}<li><code class="ident">{{ identifier.scheme }}:{{ identifier.normalized_value }}</code></li>{% endfor %}
+              </ul>
+            </td>
+            <td>
+              {% if candidate.status.value == "existing" and candidate.paper_id %}
+                <a href="{{ url_for('paper_detail', paper_id=candidate.paper_id) }}">詳細を見る</a>
+              {% elif candidate.status.value == "ambiguous" %}
+                {% for paper_id in candidate.candidate_paper_ids %}<a href="{{ url_for('paper_detail', paper_id=paper_id) }}">{{ (paper_id|string)[:8] }}</a>{% if not loop.last %} {% endif %}{% endfor %}
+              {% elif candidate.status.value == "new" %}
+                {% set pick = namespace(identifier=none) %}
+                {% for identifier in candidate.identifiers %}{% if pick.identifier is none and identifier.scheme == "openalex" %}{% set pick.identifier = identifier %}{% endif %}{% endfor %}
+                {% if pick.identifier is none %}{% for identifier in candidate.identifiers %}{% if pick.identifier is none and identifier.scheme == "doi" %}{% set pick.identifier = identifier %}{% endif %}{% endfor %}{% endif %}
+                {% if pick.identifier %}
+                <form method="post" action="{{ url_for('paper_import') }}" data-busy-label="通信中…">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="scheme" value="{{ pick.identifier.scheme }}">
+                  <input type="hidden" name="value" value="{{ pick.identifier.normalized_value }}">
+                  <button type="submit">取り込む</button>
+                </form>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">見つかりませんでした。</p>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.changes.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 scripts/check_docs.py
+      - id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          base = os.environ.get("BASE_SHA", "")
+          full = (
+              os.environ["GITHUB_EVENT_NAME"] == "workflow_dispatch"
+              or os.environ["GITHUB_REF"] in ("refs/heads/main", "refs/heads/develop")
+              or not base.strip("0")
+          )
+          if not full:
+              paths = subprocess.check_output(
+                  ["git", "diff", "--name-only", base, "HEAD"], text=True
+              ).splitlines()
+              full = any(not path.endswith(".md") for path in paths)
+          value = str(full).lower()
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              output.write(f"code={value}\n")
+          print(f"Run full checks: {value}")
+          PY
+
+  check:
+    needs: docs
+    if: needs.docs.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest
+      - run: uv build

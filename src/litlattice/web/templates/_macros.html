@@ -1,0 +1,30 @@
+{% macro library_state(paper) -%}
+  {%- if paper.in_library -%}
+    <span class="lib lib-in"><span aria-hidden="true">●</span> ライブラリ登録済み</span>
+  {%- else -%}
+    <span class="lib lib-out"><span aria-hidden="true">○</span> ライブラリ未登録</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro paper_link(paper) -%}
+  <a href="{{ url_for('paper_detail', paper_id=paper.id) }}">{{ paper_label(paper) }}</a>
+  {%- if not paper.title %} <span class="muted">（無題）</span>{% endif -%}
+{%- endmacro %}
+
+{% macro related_list(papers, glyph, empty) -%}
+  {% if papers %}
+    <ul class="related">
+      {% for p in papers %}
+        <li>
+          <span class="dir" aria-hidden="true">{{ glyph }}</span>
+          <span class="related-main">{{ paper_link(p) }}
+            {% set pid = primary_identifier(p) %}{% if pid and p.title %}<code class="ident">{{ pid }}</code>{% endif %}
+          </span>
+          {{ library_state(p) }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">{{ empty }}</p>
+  {% endif %}
+{%- endmacro %}
