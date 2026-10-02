@@ -1,4 +1,4 @@
-# ADR 0003: Core use caseをtransaction boundaryとする
+# ADR 0002: Core use caseをtransaction boundaryとする
 
 - Status: Accepted
 - Date: 2026-09-30

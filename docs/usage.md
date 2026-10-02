@@ -19,7 +19,7 @@ llat --db /path/to/library.db init
 llat --db /path/to/library.db paper list
 ```
 
-以前の開発版DBはupgradeできない。新しいDB pathを指定して `llat init` で作り直す。現在のschemaのDBに対するinitは再実行できる。
+初期化済みのDBに対する `llat init` は再実行できる。
 
 ## PDFを認識して論文に関連付ける
 

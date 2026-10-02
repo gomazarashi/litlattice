@@ -16,7 +16,7 @@ LitLatticeは研究論文を管理し、引用関係を探索するシステム�
 詳細の正本は [仕様](docs/spec.md) とaccepted ADRである。実装の都合やテストを通すためだけに変更しない。
 
 - 永続データの正本はSQLite。グラフは解析用の表現とする
-- 永続化はSQLAlchemy、schema変更と新規DB作成はAlembic migrationを使う（ADR 0002）
+- 永続化はSQLAlchemy、schema変更と新規DB作成はAlembic migrationを使う（ADR 0001）
 - 独立Entityは原則UUID v4。運用timestampはUTCで、naive datetimeを永続化しない
 - Paperの発見、Library登録、DocumentCopyの存在は区別する。発見・scan・import・expandでLibrary登録やPDF取得を暗黙に行わない
 - 外部識別子をPaperの主キーにせず、scheme・入力値・正規化値を区別する。同じ外部識別子を複数Paperへ割り当てない

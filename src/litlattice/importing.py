@@ -69,7 +69,7 @@ def import_paper(
     The provider is consulted before any transaction is opened; if it knows no
     such work, ``WorkNotFound`` is raised and nothing is written. The work is
     trusted only when it shares at least one identifier with the input
-    (ADR 0004); otherwise the result is ``unconfirmed`` and nothing changes.
+    (ADR 0003); otherwise the result is ``unconfirmed`` and nothing changes.
     On success one transaction creates or matches the Paper with the work's
     identifiers only: input identifiers the work does not report are returned
     as ``identifiers_ignored`` instead of being attached. The Library is never

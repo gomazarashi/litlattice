@@ -1,4 +1,4 @@
-# ADR 0002: SQLAlchemy 2.x と Alembic による永続化
+# ADR 0001: SQLAlchemy 2.x と Alembic による永続化
 
 - Status: Accepted
 - Date: 2026-09-30

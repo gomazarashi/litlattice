@@ -1,4 +1,4 @@
-# ADR 0004: OpenAlex連携と通信のtransaction境界
+# ADR 0003: OpenAlex連携と通信のtransaction境界
 
 - Status: Accepted
 - Date: 2026-09-30

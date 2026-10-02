@@ -31,7 +31,7 @@ uv sync --locked
 
 依存の下限は必要なAPI・修正、上限は既知の互換性上の理由で決める。現在の下限は旧版での検証をせずに機械的に下げない。全依存に一律の上限を付けず、導入時のversionだけを理由に更新もしない。追加時は用途、Python対応、ライセンス、保守状況、代替手段を確認する。
 
-現在のProvider通信は標準ライブラリの `urllib` を使う（ADR 0004）。PageRankはnumpy/scipyを追加せず `litlattice.graph` で計算し、NetworkXの参照実装との一致をテストする。これらの実装判断を変更する場合も、CoreとProviderの境界や指標の意味を維持する。
+現在のProvider通信は標準ライブラリの `urllib` を使う（ADR 0003）。PageRankはnumpy/scipyを追加せず `litlattice.graph` で計算し、NetworkXの参照実装との一致をテストする。これらの実装判断を変更する場合も、CoreとProviderの境界や指標の意味を維持する。
 
 プロジェクトのライセンスは未定。決定時は依存ライブラリとの適合を確認する。
 
@@ -57,7 +57,7 @@ CIはPRなしでも作業branchへのpushで動く。文書だけの変更は文
 
 ## DBとmigration
 
-SQLAlchemyとAlembicを使う。新規DBもAlembic migrationで作り、`create_all()`を使わない（ADR 0002）。migrationはpackage resourceとして配布し、install後も `llat init` で適用できるようにする。
+SQLAlchemyとAlembicを使う。新規DBもAlembic migrationで作り、`create_all()`を使わない（ADR 0001）。migrationはpackage resourceとして配布し、install後も `llat init` で適用できるようにする。
 
 ```bash
 export LITLATTICE_DB=/tmp/litlattice-dev.db
@@ -67,14 +67,14 @@ uv run alembic revision --autogenerate -m "..."
 uv run alembic upgrade head
 ```
 
-autogenerateは補助であり、生成したmigrationはレビューする。現在のinitial migrationは簡素化後のschemaを作る。以前の開発版DBとの互換性はなく、新しいDB pathで `llat init` を実行して作り直す。schema変更時はモデルとの一致と配布物からの新規DB作成を確認する。
+autogenerateは補助であり、生成したmigrationはレビューする。schema変更時はモデルとの一致と配布物からの新規DB作成を確認する。
 
 ## Webの開発
 
 templateとstatic fileは `src/litlattice/web/` にpackage resourceとして置く。画面の操作確認は変更した流れと対象画面で行う。
 
 - 外部CDNやweb fontを使わず、JavaScript依存はversion・ライセンス・入手元を記録して同梱する
-- 現在Node.jsのビルド工程は使わない。必要性が生じたら開発・配布の負担と効果を評価する（ADR 0005）
+- 現在Node.jsのビルド工程は使わない。必要性が生じたら開発・配布の負担と効果を評価する（ADR 0004）
 - Cytoscape.jsの更新手順は [同梱ファイルのREADME](../src/litlattice/web/static/vendor/cytoscape/README.md) を参照する。配布ファイルを手で改変しない
 - 自身のJavaScriptは `static/` に置く。外部文字列はtextContentやCytoscapeのlabelで表示し、innerHTMLへ入れない
 - 状態変更はCSRF付きPOSTでCoreを呼ぶ。認証・外部公開用サーバーは対象外
