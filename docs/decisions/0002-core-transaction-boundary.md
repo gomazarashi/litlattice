@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-30
+- Updated: 2026-10-04
 
 ## Context
 
@@ -9,11 +10,15 @@ CLIとローカルWeb UIが同じCoreを利用する。
 
 Interfaceごとにtransactionの扱いが異なると、一部だけが保存される操作や、Interfaceへの永続化詳細の漏出が起こりやすい。
 
+DocumentCopyへの取り込みでPaperの保存と関連付けを別々にcommitすると、関連付けが失敗してもPaperや識別子が残る。原子性の対象を永続化変更と明記し、外部通信前のreadと外部通信後のwriteを区別する必要がある。
+
 一方、初期段階でRepositoryやUnit of Work等の抽象層を導入すると、実際の必要性が明確になる前に構造が複雑になる。
 
 ## Decision
 
-- 一つのpublic Core use caseが一つのtransaction boundaryを所有する。use caseは成功時にcommitし、失敗時には何もcommitしない。
+- 変更系のpublic Core use caseは、そのuse caseによる永続化変更を一つのwrite transactionで原子的にcommitする。write処理の途中で失敗した場合、そのuse caseによる変更は残さない。
+- 外部I/O前の短いread transactionは許容する。外部I/O中にwrite transactionを保持せず、外部I/O後のwrite transaction内で必要な前提条件を再確認してから変更をまとめて適用する。通信との境界は [ADR 0003](0003-openalex-first-provider.md) に従う。
+- この原則は、public Core use caseにつき物理的なtransactionを厳密に一つに制限するものではない。DocumentCopyへの取り込みでは、存在確認のread、Provider通信、存在・同定の再確認とPaper・識別子・metadata・関連付けのatomic writeに分ける。
 - CLI等のInterfaceはSQLAlchemyの `Session` を直接操作しない。Interfaceは使用するDBを指定してCore use caseを呼び出す。
 - 現段階ではRepository abstractionを導入しない。Core use caseの内部でSQLAlchemyを直接使用してよい。
 - ORM modelとdomain modelの完全な二重モデルはまだ導入しない。

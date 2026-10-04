@@ -10,7 +10,7 @@ from sqlalchemy import event, func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from litlattice.documents import DocumentRecord, list_documents
+from litlattice.documents import DocumentRecord, link_document, list_documents
 from litlattice.errors import DocumentNotFound, InvalidIdentifier, WorkNotFound
 from litlattice.importing import (
     CandidateStatus,
@@ -21,6 +21,7 @@ from litlattice.importing import (
 )
 from litlattice.models import (
     Citation,
+    DocumentCopy,
     Paper,
     PaperIdentifier,
 )
@@ -477,7 +478,7 @@ def test_import_for_document_unconfirmed_links_nothing(
 
     assert result.import_result.status is ImportStatus.unconfirmed
     assert not result.linked
-    assert list_papers(engine) == []
+    assert _counts(engine) == (0, 0, 0, 0)
     assert list_documents(engine)[0].paper_id is None
 
 
@@ -524,5 +525,134 @@ def test_import_for_document_unknown_work_raises_and_links_nothing(
             engine, provider, document.id, [("doi", "10.1000/abc")]
         )
 
-    assert list_papers(engine) == []
+    assert _counts(engine) == (0, 0, 0, 0)
     assert list_documents(engine)[0].paper_id is None
+
+
+@pytest.mark.parametrize("matched", [False, True])
+@pytest.mark.parametrize("previously_linked", [False, True])
+def test_import_for_document_link_failure_rolls_back_all_changes(
+    engine: Engine, tmp_path: Path, matched: bool, previously_linked: bool
+) -> None:
+    document = _scanned_document(engine, tmp_path)
+    if matched:
+        create_paper(engine, [("doi", "10.1000/abc")])
+    if previously_linked:
+        previous = create_paper(engine, [("doi", "10.1000/previous")])
+        link_document(engine, document.id, previous.id)
+    papers_before = list_papers(engine)
+    documents_before = list_documents(engine)
+    counts_before = _counts(engine)
+    provider = FakeProvider([work("W1", "10.1000/abc", "Attention", 2017)])
+
+    def fail_after_link(mapper, connection, target) -> None:
+        # The UPDATE has executed, after Paper/identifier writes were flushed.
+        assert target.id == document.id
+        assert target.paper_id is not None
+        raise RuntimeError("link failed")
+
+    event.listen(DocumentCopy, "after_update", fail_after_link)
+    try:
+        with pytest.raises(RuntimeError, match="link failed"):
+            import_paper_for_document(
+                engine, provider, document.id, [("doi", "10.1000/abc")]
+            )
+    finally:
+        event.remove(DocumentCopy, "after_update", fail_after_link)
+
+    assert _counts(engine) == counts_before
+    assert list_papers(engine) == papers_before
+    assert list_documents(engine) == documents_before
+
+
+def test_import_for_document_provider_runs_between_read_and_atomic_write(
+    engine: Engine, tmp_path: Path
+) -> None:
+    document = _scanned_document(engine, tmp_path)
+    transactions: list[str] = []
+    event.listen(engine, "begin", lambda connection: transactions.append("begin"))
+    event.listen(engine, "commit", lambda connection: transactions.append("commit"))
+
+    class SpyProvider(FakeProvider):
+        def lookup_work(self, identifiers) -> ProviderWork | None:
+            assert transactions == ["begin", "commit"]
+            assert _counts(engine) == (0, 0, 0, 0)
+            transactions.clear()
+            transactions.append("lookup")
+            return super().lookup_work(identifiers)
+
+    provider = SpyProvider([work("W1", "10.1000/abc", "Attention", 2017)])
+    result = import_paper_for_document(
+        engine, provider, document.id, [("doi", "10.1000/abc")]
+    )
+
+    assert result.linked
+    assert transactions == ["lookup", "begin", "commit"]
+
+
+def test_import_for_document_matches_paper_created_during_lookup(
+    engine: Engine, tmp_path: Path
+) -> None:
+    document = _scanned_document(engine, tmp_path)
+    existing = None
+
+    class ConcurrentProvider(FakeProvider):
+        def lookup_work(self, identifiers) -> ProviderWork | None:
+            nonlocal existing
+            existing = create_paper(engine, [("doi", "10.1000/abc")])
+            return super().lookup_work(identifiers)
+
+    provider = ConcurrentProvider([work("W1", "10.1000/abc", "Attention", 2017)])
+    result = import_paper_for_document(
+        engine, provider, document.id, [("doi", "10.1000/abc")]
+    )
+
+    assert result.import_result.status is ImportStatus.matched
+    assert result.import_result.paper_id == existing.id
+    assert result.linked
+    paper = get_paper(engine, existing.id)
+    assert paper.title == "Attention"
+    assert paper.publication_year == 2017
+    assert _keys(paper.identifiers) == {("doi", "10.1000/abc"), ("openalex", "W1")}
+    assert not paper.in_library
+    assert len(list_papers(engine)) == 1
+    assert list_documents(engine)[0].paper_id == paper.id
+
+
+def test_import_for_document_rechecks_existence_after_lookup(
+    engine: Engine, tmp_path: Path
+) -> None:
+    document = _scanned_document(engine, tmp_path)
+
+    class DeletingProvider(FakeProvider):
+        def lookup_work(self, identifiers) -> ProviderWork | None:
+            with Session(engine) as session, session.begin():
+                session.delete(session.get_one(DocumentCopy, document.id))
+            return super().lookup_work(identifiers)
+
+    provider = DeletingProvider([work("W1", "10.1000/abc", "Attention", 2017)])
+    with pytest.raises(DocumentNotFound):
+        import_paper_for_document(
+            engine, provider, document.id, [("doi", "10.1000/abc")]
+        )
+
+    assert provider.lookups == [[("doi", "10.1000/abc")]]
+    assert _counts(engine) == (0, 0, 0, 0)
+    assert list_documents(engine) == []
+
+
+@pytest.mark.parametrize(
+    ("identifiers", "error"),
+    [([], ValueError), ([("doi", "not-a-doi")], InvalidIdentifier)],
+)
+def test_import_for_document_validates_before_read_or_lookup(
+    engine: Engine, identifiers, error
+) -> None:
+    provider = FakeProvider([])
+    begins = _listen_for_begins(engine)
+
+    with pytest.raises(error):
+        import_paper_for_document(engine, provider, uuid.uuid4(), identifiers)
+
+    assert begins == []
+    assert provider.lookups == []
