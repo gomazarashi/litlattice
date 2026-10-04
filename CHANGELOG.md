@@ -10,6 +10,10 @@
 
 - プロジェクトのライセンスをMIT Licenseとして明確化し、wheel・sdistにもライセンス情報を同梱。
 
+### Changed
+
+- Webのメタデータ取得・PDF関連付け・使い方の案内文を読みやすい日本語に整理。
+
 ### Fixed
 
 - DocumentCopyへの論文取り込みと関連付けを原子的に保存し、関連付け失敗時にPaper・識別子・metadataの変更が残る問題を修正。

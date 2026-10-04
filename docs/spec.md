@@ -36,14 +36,14 @@ Sourceの削除はDocumentCopyや実ファイルを削除しない。パスは�
 
 ## Core / CLI / Webの責務
 
-Coreが同定、scan、取り込み、Library、引用、graph解析とDB transactionを担当する。結果はsession終了後も使えるデータとして返す。transaction境界は [ADR 0002](decisions/0002-core-transaction-boundary.md) に従う。
+Coreは同定、スキャン、取り込み、Library、引用、グラフ解析とDBトランザクションを担当する。結果はsession終了後も使えるデータとして返す。transaction境界は [ADR 0002](decisions/0002-core-transaction-boundary.md) に従う。
 
 CLIは初期化、Source、scan、Paper、Library、Citation、import/search/fetch/expand、graphとJSON自動化を提供する。JSONは共通serializerでCore結果を変換し、成功時はok・data・warnings、失敗時はok・error.type・error.messageを返す。stdoutへJSON以外を混ぜず、適切なexit codeを使う。v1.0以前は後方互換性を保証せず、独立schema versionは持たない。
 
-Webは人間の日常操作（Paper閲覧、検索・取り込み、PDF解決、Library、metadata取得、expand、graph探索）を優先する。CLIとWebの機能同等性は要求しない。localhost限定のserver-rendered HTMLを使い、graph描画だけbrowserのCytoscape.jsに任せる。状態変更はCSRF付きPOSTでCoreを呼ぶ。
+Webは日常的に行うPaper閲覧、検索・取り込み、PDFの同定・関連付け、Library操作、メタデータ取得、expand、グラフ探索を優先する。CLIとWebの機能同等性は要求しない。localhostでのみ利用するHTML画面をサーバー側で生成し、グラフ描画だけをブラウザ上のCytoscape.jsで行う。状態変更はCSRF付きPOSTでCoreを呼ぶ。
 
 ## OpenAlexとの境界
 
-現在のProviderはOpenAlexのみ。PaperProviderはlookup_work・search_works・fetch_references・fetch_citationsをまとめる。ProviderWorkは通信結果であり、Paperの同定と永続化はCoreが行う。OpenAlex固有通信はOpenAlexClientに閉じ込め、通信中にwrite transactionを開かない。
+現在のProviderはOpenAlexのみ。PaperProviderはlookup_work・search_works・fetch_references・fetch_citationsをまとめる。ProviderWorkは通信結果であり、Paperの同定と永続化はCoreが行う。OpenAlex固有の通信処理はOpenAlexClientにまとめ、通信中にwrite transactionを開かない。
 
 入力と共有する識別子がないrecordは適用しない。preprintと出版版の誤統合を避ける。詳細は [ADR 0003](decisions/0003-openalex-first-provider.md) と [利用ガイド](usage.md) を参照する。

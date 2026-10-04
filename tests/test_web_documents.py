@@ -126,14 +126,14 @@ def test_documents_list_filters_unlinked(db_path: Path, pdf_dir: Path) -> None:
 
     assert str(pdf_dir / "unknown.pdf") in unlinked
     assert str(pdf_dir / "2401.12345.pdf") not in unlinked
-    assert "未関連付けの PDF はありません" not in unlinked
+    assert "未関連付けのPDFはありません" not in unlinked
 
 
 def test_documents_list_empty_states(db_path: Path) -> None:
     client = _client(db_path)
 
-    assert "PDF が登録されていません" in _html(client, "/documents")
-    assert "未関連付けの PDF はありません" in _html(client, "/documents?unlinked=1")
+    assert "PDFが登録されていません" in _html(client, "/documents")
+    assert "未関連付けのPDFはありません" in _html(client, "/documents?unlinked=1")
 
 
 def test_document_detail_shows_hints_assessment_and_resolution(
@@ -155,7 +155,7 @@ def test_document_detail_shows_hints_assessment_and_resolution(
     assert "doi:10.5555/one" in html
     assert "強い" in html
     assert "ambiguous" in html
-    assert "候補が複数あるため、自動では決めません" in html
+    assert "候補が複数あるため、自動では関連付けません" in html
     assert html.count(f'action="/documents/{document.id}/import"') == 3
     assert 'name="scheme" value="arxiv"' in html
     assert 'name="value" value="2401.12345"' in html
