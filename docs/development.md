@@ -33,7 +33,7 @@ uv sync --locked
 
 現在のProvider通信は標準ライブラリの `urllib` を使う（ADR 0003）。PageRankはnumpy/scipyを追加せず `litlattice.graph` で計算し、NetworkXの参照実装との一致をテストする。これらの実装判断を変更する場合も、CoreとProviderの境界や指標の意味を維持する。
 
-プロジェクトのライセンスは未定。決定時は依存ライブラリとの適合を確認する。
+プロジェクトのライセンスは [LICENSE](../LICENSE)、採用理由と依存・配布形態の確認結果は [ADR 0006](decisions/0006-project-license.md) を参照する。
 
 ## 検証
 

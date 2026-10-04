@@ -73,4 +73,5 @@ Web UIでは、論文の取り込み・タイトル検索、PDFの手がかり�
 
 ## License
 
-未定
+MIT License。本文は [LICENSE](LICENSE) を参照してください。
+同梱するCytoscape.jsには [upstreamのLICENSE](src/litlattice/web/static/vendor/cytoscape/LICENSE) が適用されます。

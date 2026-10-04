@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+### Added
+
+- プロジェクトのライセンスをMIT Licenseとして明確化し、wheel・sdistにもライセンス情報を同梱。
+
 ### Fixed
 
 - DocumentCopyへの論文取り込みと関連付けを原子的に保存し、関連付け失敗時にPaper・識別子・metadataの変更が残る問題を修正。
