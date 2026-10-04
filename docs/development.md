@@ -67,7 +67,13 @@ uv run alembic revision --autogenerate -m "..."
 uv run alembic upgrade head
 ```
 
-自動生成したmigrationは、そのまま採用せずレビューする。schema変更時はモデルとの一致と配布物からの新規DB作成を確認する。
+schema変更にはAlembic migrationを追加し、自動生成した内容は必ずレビューする。リリース済みrevisionの内容やupgrade pathを壊さない。更新・失敗時の保証は [ADR 0001](decisions/0001-use-sqlalchemy-alembic-persistence.md#リリース済みdbの更新と復旧)、実データの更新とバックアップ手順は [利用ガイド](usage.md#dbの更新バックアップ復元) に従う。
+
+現在はv0.1.0のrevision `0001` だけなので、架空のmigrationは追加しない。新規DBのhead適用、既存データを含む再実行、未適用・未知のrevisionの通常open拒否、明示的なinit後のopen、migrationエラーの案内、モデルとの一致をテストする。
+
+2つ目以降のrevisionを追加したら、v0.1.0のschema fixtureまたはrevision `0001` を起点に既存データを投入し、headへのupgrade後もPaper・識別子・Library登録・Citation・Source・DocumentCopyの値と関連が保持される回帰テストを必須とする。以降のリリース済みschemaについても、その変更で影響を受けるupgrade pathを確認する。
+
+migration resourceはinstalled packageから利用できなければならない。schema変更時はモデルとの一致に加え、wheel・sdistへの `migrations/env.py`、`versions/`、`script.py.mako` の同梱と、wheelを一時環境にインストールした後の新規DB作成を確認する。配布物のinstall smoke testをCIへ追加する作業は [TODO](../TODO.md) に残す。
 
 ## Webの開発
 

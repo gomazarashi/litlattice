@@ -25,6 +25,7 @@ Sourceの削除はDocumentCopyや実ファイルを削除しない。パスは�
 ## 不変条件
 
 - 新規DBとschema変更はSQLAlchemyのモデルとAlembic migrationで管理する
+- v0.1.0以降のリリース済みDBは、原則としてmigrationで後続の対応versionへ更新する。DB再作成を通常のupgrade手順にしない。更新・復旧方針は [ADR 0001](decisions/0001-use-sqlalchemy-alembic-persistence.md) に従う
 - Entity IDはUUID v4。運用日時はtimezone付きUTCとし、naive datetimeを保存しない
 - Paperの発見とLibrary登録は区別する。scan・import・fetch・expand・PDF関連付けでLibraryへ暗黙に登録せず、PDFも取得しない
 - 外部識別子の正規化後の完全一致で同定する。同じ外部識別子を複数Paperへ割り当てない。タイトル類似だけで自動統合しない
@@ -38,7 +39,7 @@ Sourceの削除はDocumentCopyや実ファイルを削除しない。パスは�
 
 Coreは同定、スキャン、取り込み、Library、引用、グラフ解析とDBトランザクションを担当する。結果はsession終了後も使えるデータとして返す。transaction境界は [ADR 0002](decisions/0002-core-transaction-boundary.md) に従う。
 
-CLIは初期化、Source、scan、Paper、Library、Citation、import/search/fetch/expand、graphとJSON自動化を提供する。JSONは共通serializerでCore結果を変換し、成功時はok・data・warnings、失敗時はok・error.type・error.messageを返す。stdoutへJSON以外を混ぜず、適切なexit codeを使う。v1.0以前は後方互換性を保証せず、独立schema versionは持たない。
+CLIは初期化、Source、scan、Paper、Library、Citation、import/search/fetch/expand、graphとJSON自動化を提供する。JSONは共通serializerでCore結果を変換し、成功時はok・data・warnings、失敗時はok・error.type・error.messageを返す。stdoutへJSON以外を混ぜず、適切なexit codeを使う。v1.0以前はJSON出力の後方互換性を保証せず、独立schema versionは持たない。
 
 Webは日常的に行うPaper閲覧、検索・取り込み、PDFの同定・関連付け、Library操作、メタデータ取得、expand、グラフ探索を優先する。CLIとWebの機能同等性は要求しない。localhostでのみ利用するHTML画面をサーバー側で生成し、グラフ描画だけをブラウザ上のCytoscape.jsで行う。状態変更はCSRF付きPOSTでCoreを呼ぶ。
 
