@@ -42,11 +42,11 @@
 
 <section aria-labelledby="openalex">
   <h2 id="openalex">OpenAlex</h2>
-  <p class="note">OpenAlex と通信します。数秒〜数十秒かかることがあります。取得・探索した論文はライブラリには追加しません。</p>
+  <p class="note">OpenAlexと通信します。数秒〜数十秒かかることがあります。取得・探索した論文はライブラリには追加しません。</p>
   <div class="openalex-actions">
     <form method="post" action="{{ url_for('paper_fetch', paper_id=paper.id) }}" class="action-form" data-busy-label="通信中…">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit">metadata を取得</button>
+      <button type="submit">メタデータを取得</button>
     </form>
     <form method="post" action="{{ url_for('paper_expand', paper_id=paper.id) }}" class="action-form" data-busy-label="通信中…">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

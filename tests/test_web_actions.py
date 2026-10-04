@@ -134,10 +134,10 @@ def test_paper_add_page_shows_forms_and_nav(db_path: Path) -> None:
     assert 'href="/papers/new" aria-current="page"' in html
     assert "識別子から取り込む" in html
     assert 'action="/papers/import"' in html
-    assert "OpenAlex から取り込む" in html
+    assert "OpenAlexから取り込む" in html
     assert "タイトルで探す" in html
     assert 'action="/papers/new"' in html
-    assert "OpenAlex で検索" in html
+    assert "OpenAlexで検索" in html
     assert "何も保存しません" in html
     assert 'name="csrf_token" value="' in html
 
@@ -366,7 +366,7 @@ def test_fetch_updates_metadata(db_path: Path) -> None:
     assert response.status_code == 303
     assert response.headers["Location"].endswith(f"/papers/{paper_id}")
     html = _html(client, f"/papers/{paper_id}")
-    assert "OpenAlex から metadata を取得しました" in html
+    assert "OpenAlexからメタデータを取得しました" in html
     assert "タイトル" in html
     assert "出版年" in html
     assert "追加した識別子: openalex:W1" in html
@@ -390,7 +390,7 @@ def test_fetch_unconfirmed_warns_and_keeps_metadata(db_path: Path) -> None:
     assert response.status_code == 303
     html = _html(client, f"/papers/{paper_id}")
     assert "同じ論文と確認できませんでした" in html
-    assert "metadata は適用していません" in html
+    assert "メタデータは適用していません" in html
     with open_database(db_path) as engine:
         assert get_paper(engine, paper_id).title is None
 

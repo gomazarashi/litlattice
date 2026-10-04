@@ -3,16 +3,16 @@
 {% block content %}
 <h1>使い方</h1>
 <p class="note">
-  LitLattice は、論文とその引用関係を管理・探索するためのツールです。
-  CLI（<code>llat</code>）とこの Web 画面から、同じデータベースの論文を追加・管理し、引用関係を探索できます。
+  LitLatticeは、論文とその引用関係を管理・探索するためのツールです。
+  CLI（<code>llat</code>）とこのWeb画面から、同じデータベースの論文を追加・管理し、引用関係を探索できます。
 </p>
 
 <nav aria-label="このページの目次" class="toc">
   <ul>
     <li><a href="#concepts">基本的な考え方</a></li>
     <li><a href="#screens">画面の見方</a></li>
-    <li><a href="#web">Web での操作</a></li>
-    <li><a href="#cli">CLI での操作</a></li>
+    <li><a href="#web">Webでの操作</a></li>
+    <li><a href="#cli">CLIでの操作</a></li>
     <li><a href="#flow">基本的な流れ</a></li>
     <li><a href="#notes">注意</a></li>
   </ul>
@@ -22,11 +22,11 @@
   <h2 id="concepts">基本的な考え方</h2>
   <dl class="glossary">
     <dt>論文</dt>
-    <dd>世の中に存在する一つの論文です。タイトルや DOI・arXiv ID などの識別子を持てます。タイトルが同じでも、自動的に同じ論文とはみなしません。</dd>
+    <dd>一つの論文を表す記録です。タイトルやDOI・arXiv IDなどの識別子を持てます。タイトルが同じでも、自動的に同じ論文とはみなしません。</dd>
     <dt>ライブラリ</dt>
-    <dd>自分が管理対象として選んだ論文の集まりです。論文はライブラリに登録しなくてもデータベースに存在できます。ライブラリから外しても論文自体は削除されません。</dd>
+    <dd>自分が管理対象として選んだ論文の集まりです。論文はライブラリに登録しなくてもデータベースに保存できます。ライブラリから外しても論文自体は削除されません。</dd>
     <dt>引用 <span class="muted">A → B</span></dt>
-    <dd>「論文 A が論文 B を引用している」ことを表します。向きは常にこの意味です。引用を登録してもライブラリの状態は変わりません。</dd>
+    <dd>「論文Aが論文Bを引用している」ことを表します。向きは常にこの意味です。引用を登録してもライブラリの状態は変わりません。</dd>
     <dt>参考文献</dt>
     <dd>ある論文が引用している論文です（この論文 → 相手）。</dd>
     <dt>被引用</dt>
@@ -42,10 +42,10 @@
     <tbody>
       <tr><td class="nowrap"><a href="{{ url_for('dashboard') }}">概要</a></td><td>論文数・ライブラリ件数・引用数と、被引用数の多い論文を表示します。</td></tr>
       <tr><td class="nowrap"><a href="{{ url_for('papers') }}">論文</a></td><td>データベース内のすべての論文の一覧です。タイトルをクリックすると詳細を開きます。</td></tr>
-      <tr><td class="nowrap">論文の詳細</td><td>識別子、ライブラリ状態、参考文献、被引用を表示します。ここからライブラリへの追加・削除、metadata の取得、引用の探索ができます。</td></tr>
-      <tr><td class="nowrap"><a href="{{ url_for('paper_add') }}">論文を追加</a></td><td>DOI・arXiv ID・OpenAlex ID から取り込むか、タイトルで検索して候補を確認できます。</td></tr>
-      <tr><td class="nowrap"><a href="{{ url_for('documents') }}">PDF</a></td><td>このマシンの PDF と関連付いた論文を表示します。未解決の PDF を絞り込み、詳細から同定の手がかりを確認できます。</td></tr>
-      <tr><td class="nowrap"><a href="{{ url_for('graph') }}">引用グラフ</a></td><td>ライブラリに登録した論文と、それらの間の引用を表示します。ノードの大きさは PageRank（このグラフ内での重要度）です。拡大・縮小、ドラッグでの移動、「全体を表示」、論文を探す操作ができます。ノードをクリックすると詳細を開きます。</td></tr>
+      <tr><td class="nowrap">論文の詳細</td><td>識別子、ライブラリ状態、参考文献、被引用を表示します。ここからライブラリへの追加・解除、メタデータの取得、引用の探索ができます。</td></tr>
+      <tr><td class="nowrap"><a href="{{ url_for('paper_add') }}">論文を追加</a></td><td>DOI・arXiv ID・OpenAlex IDから取り込むか、タイトルで検索して候補を確認できます。</td></tr>
+      <tr><td class="nowrap"><a href="{{ url_for('documents') }}">PDF</a></td><td>このマシンのPDFと関連付いた論文を表示します。未解決のPDFを絞り込み、詳細から同定の手がかりを確認できます。</td></tr>
+      <tr><td class="nowrap"><a href="{{ url_for('graph') }}">引用グラフ</a></td><td>ライブラリに登録した論文と、それらの間の引用を表示します。ノードの大きさはPageRank（このグラフ内での重要度）です。拡大・縮小、ドラッグでの移動、「全体を表示」、論文を探す操作ができます。ノードをクリックすると詳細を開きます。</td></tr>
     </tbody>
   </table>
   </div>
@@ -54,25 +54,25 @@
   <ul class="legend-list">
     <li><span class="lib lib-in"><span aria-hidden="true">●</span> ライブラリ登録済み</span> / <span class="lib lib-out"><span aria-hidden="true">○</span> ライブラリ未登録</span></li>
     <li><strong>→</strong> 参考文献（この論文が引用している）、<strong>←</strong> 被引用（この論文を引用している）</li>
-    <li>引用グラフでは、ライブラリ登録済みの論文を塗りつぶし、未登録の論文を点線の白抜きで示します。論文の詳細の「周辺グラフを見る」で、起点の論文の周辺（左: 被引用、右: 参考文献）を表示できます。</li>
+    <li>引用グラフでは、ライブラリ登録済みの論文を塗りつぶし、未登録の論文を点線の白抜きで示します。論文の詳細にある「周辺グラフを見る」では、起点の論文の左に被引用、右に参考文献を表示できます。</li>
   </ul>
 </section>
 
 <section aria-labelledby="web">
-  <h2 id="web">Web での操作</h2>
+  <h2 id="web">Webでの操作</h2>
   <ol class="steps">
     <li>「論文を追加」で識別子を入力して取り込むか、タイトルを検索して候補を確認します。検索しただけでは保存されません。</li>
-    <li>管理対象にする論文は、詳細画面でライブラリに追加します。取り込みや PDF の関連付けでは自動追加されません。</li>
-    <li>論文の詳細で「metadata を取得」を押すと、OpenAlex から不足するタイトル・出版年・識別子を補います。</li>
-    <li>引用を探索するには、深さ（1・2）、方向、上限（20・50・100 件）を選びます。保存した引用は周辺グラフで確認できます。</li>
-    <li>「PDF」で未解決のものを選び、手がかりと候補を確認して関連付けます。候補がなければ識別子から論文を取り込むか、タイトル検索で論文を追加して、その論文の UUID を入力します。</li>
+    <li>管理対象にする論文は、詳細画面でライブラリに追加します。取り込みやPDFの関連付けでは自動追加されません。</li>
+    <li>論文の詳細で「メタデータを取得」を押すと、OpenAlexから不足するタイトル・出版年・識別子を補います。</li>
+    <li>引用を探索するには、深さ（1・2）、方向、上限（20・50・100件）を選びます。保存した引用は周辺グラフで確認できます。</li>
+    <li>「PDF」で未解決のものを選び、手がかりと候補を確認して関連付けます。候補がなければ識別子から論文を取り込むか、タイトル検索で論文を追加して、その論文のUUIDを入力します。</li>
   </ol>
-  <p class="hint">PDF の関連付けを解除しても、論文・PDF の記録・実ファイルは残ります。PDF フォルダの登録と scan は CLI から行います。</p>
-  <p class="hint">OpenAlex と通信する操作は時間がかかることがあります。「通信中…」の間は完了を待ってください。失敗したときは画面に理由を表示します。</p>
+  <p class="hint">PDFの関連付けを解除しても、論文・PDFの記録・実ファイルは残ります。PDFフォルダの登録とscanはCLIから行います。</p>
+  <p class="hint">OpenAlexと通信する操作は時間がかかることがあります。「通信中…」の間は完了を待ってください。失敗したときは画面に理由を表示します。</p>
 </section>
 
 <section aria-labelledby="cli">
-  <h2 id="cli">CLI での操作</h2>
+  <h2 id="cli">CLIでの操作</h2>
   <p class="note">
     この画面が参照しているデータベースを操作するには、<code>--db</code> に同じパスを指定します。
     以下の例ではそのパスを <code>$DB</code> としています。
@@ -84,41 +84,41 @@
     <tbody>
       <tr><td><code>llat --db "$DB" init</code></td><td>データベースを作成・更新します。最初に一度実行します。</td></tr>
       <tr><td><code>llat --db "$DB" paper create --title "…" --doi …</code></td><td>論文を作成します。<code>--doi</code> / <code>--arxiv</code> は複数指定できます。ライブラリには追加されません。</td></tr>
-      <tr><td><code>llat --db "$DB" paper import --doi …</code><br><code>llat --db "$DB" search "タイトル"</code></td><td>OpenAlex から論文を取り込む、または検索候補を表示します。検索だけでは保存しません。</td></tr>
-      <tr><td><code>llat --db "$DB" paper fetch ID</code><br><code>llat --db "$DB" expand ID --depth 1 --max-nodes 20</code></td><td>metadata を補い、引用を探索して保存します。ライブラリには自動追加しません。</td></tr>
-      <tr><td><code>llat --db "$DB" src add /path/to/pdfs</code><br><code>llat --db "$DB" scan</code></td><td>PDF フォルダを登録し、ファイルを認識します。PDF のダウンロードやライブラリへの追加はしません。</td></tr>
-      <tr><td><code>llat --db "$DB" doc list --unlinked</code><br><code>llat --db "$DB" doc show DOCUMENT_ID</code></td><td>未解決の PDF と、同定の手がかりを表示します。</td></tr>
-      <tr><td><code>llat --db "$DB" doc link DOCUMENT_ID PAPER_ID</code><br><code>llat --db "$DB" doc unlink DOCUMENT_ID PAPER_ID</code><br><code>llat --db "$DB" doc import DOCUMENT_ID --doi …</code></td><td>PDF と論文を関連付ける、関連を解除する、論文を取り込んで関連付ける操作です。</td></tr>
+      <tr><td><code>llat --db "$DB" paper import --doi …</code><br><code>llat --db "$DB" search "タイトル"</code></td><td>OpenAlexから論文を取り込む、または検索候補を表示します。検索だけでは保存しません。</td></tr>
+      <tr><td><code>llat --db "$DB" paper fetch ID</code><br><code>llat --db "$DB" expand ID --depth 1 --max-nodes 20</code></td><td>メタデータを補い、引用を探索して保存します。ライブラリには自動追加しません。</td></tr>
+      <tr><td><code>llat --db "$DB" src add /path/to/pdfs</code><br><code>llat --db "$DB" scan</code></td><td>PDFフォルダを登録し、ファイルを認識します。PDFのダウンロードやライブラリへの追加はしません。</td></tr>
+      <tr><td><code>llat --db "$DB" doc list --unlinked</code><br><code>llat --db "$DB" doc show DOCUMENT_ID</code></td><td>未解決のPDFと、同定の手がかりを表示します。</td></tr>
+      <tr><td><code>llat --db "$DB" doc link DOCUMENT_ID PAPER_ID</code><br><code>llat --db "$DB" doc unlink DOCUMENT_ID PAPER_ID</code><br><code>llat --db "$DB" doc import DOCUMENT_ID --doi …</code></td><td>PDFと論文の関連付け・解除、論文の取り込みと関連付けを行います。</td></tr>
       <tr><td><code>llat --db "$DB" paper list</code></td><td>論文の一覧を表示します（<code>L</code> はライブラリ登録済み）。</td></tr>
       <tr><td><code>llat --db "$DB" show ID</code></td><td>論文の詳細を表示します。</td></tr>
-      <tr><td><code>llat --db "$DB" lib add ID</code><br><code>llat --db "$DB" lib remove ID</code></td><td>ライブラリに追加・ライブラリから外します。</td></tr>
+      <tr><td><code>llat --db "$DB" lib add ID</code><br><code>llat --db "$DB" lib remove ID</code></td><td>論文をライブラリに追加するか、ライブラリから外します。</td></tr>
       <tr><td><code>llat --db "$DB" citation add 引用元ID 引用先ID</code></td><td>「引用元が引用先を引用している」ことを登録します。</td></tr>
       <tr><td><code>llat --db "$DB" citation list ID --direction both</code></td><td>参考文献（<code>-&gt;</code>）と被引用（<code>&lt;-</code>）を表示します。<code>references</code> / <code>citations</code> で片方だけにできます。</td></tr>
       <tr><td><code>llat --db "$DB" path 始点ID 終点ID</code></td><td>引用の向きに沿った最短経路を表示します。逆向きには辿りません。</td></tr>
-      <tr><td><code>llat --db "$DB" serve</code></td><td>この Web 画面を起動します（<code>http://127.0.0.1:8000/</code>、<code>--port</code> で変更可）。</td></tr>
+      <tr><td><code>llat --db "$DB" serve</code></td><td>このWeb画面を起動します（<code>http://127.0.0.1:8000/</code>、<code>--port</code> で変更可）。</td></tr>
     </tbody>
   </table>
   </div>
-  <p class="hint">開発環境では各コマンドの先頭に <code>uv run</code> を付けます。論文の ID は <code>paper list</code> や各画面に表示される UUID です。</p>
+  <p class="hint">開発環境では各コマンドの先頭に <code>uv run</code> を付けます。論文のIDは <code>paper list</code> や各画面に表示されるUUIDです。</p>
 </section>
 
 <section aria-labelledby="flow">
   <h2 id="flow">基本的な流れ</h2>
   <ol class="steps">
     <li><code>init</code> でデータベースを用意する</li>
-    <li>PDF フォルダを <code>src add</code> で登録して <code>scan</code> するか、「論文を追加」で論文を取り込む</li>
-    <li>未解決の PDF は「PDF」の詳細で手がかりを確認して関連付ける</li>
+    <li>PDFフォルダを <code>src add</code> で登録して <code>scan</code> するか、「論文を追加」で論文を取り込む</li>
+    <li>未解決のPDFは「PDF」の詳細で手がかりを確認して関連付ける</li>
     <li>管理したい論文だけを <code>lib add</code> でライブラリに追加する</li>
     <li>論文の詳細から引用を探索するか、<code>expand</code> を実行する。手動登録には <code>citation add</code> を使う</li>
-    <li><code>citation list</code> や <code>path</code>、この Web 画面で引用関係を探索する</li>
+    <li><code>citation list</code> や <code>path</code>、このWeb画面で引用関係を探索する</li>
   </ol>
-  <p class="hint">CLI で変更した内容は、ブラウザを再読み込みすると反映されます。</p>
+  <p class="hint">CLIで変更した内容は、ブラウザを再読み込みすると反映されます。</p>
 </section>
 
 <section aria-labelledby="notes">
   <h2 id="notes">注意</h2>
   <ul>
-    <li>検索結果や曖昧な PDF の候補は、自動で一つの論文へ統合しません。識別子と候補を確認して選んでください。</li>
+    <li>検索結果や曖昧なPDFの候補は、自動で一つの論文へ統合しません。識別子と候補を確認して選んでください。</li>
     <li>サーバーの再起動後や、ページを開いてから長時間経過した場合は、再読み込みしてからフォームを送信してください。</li>
     <li>このサーバーはローカル利用・デモ用です。<code>127.0.0.1</code> でのみ待ち受け、認証はありません。外部ネットワークには公開しないでください。</li>
   </ul>

@@ -9,7 +9,7 @@
 {% set assessment_labels = {
   "linked": "既存の論文に一致します",
   "created": "新しい論文を作成できます",
-  "ambiguous": "候補が複数あるため、自動では決めません",
+  "ambiguous": "候補が複数あるため、自動では関連付けません",
   "unidentified": "識別子が見つからないため、手動での関連付けが必要です",
 } %}
 
@@ -20,7 +20,7 @@
     {% if inspection.file_available %}
       ファイルを利用できます
     {% elif document.missing_since %}
-      <span class="muted">ファイルが見つかりません（scan で missing として記録済み）。</span>
+      <span class="muted">ファイルが見つかりません。スキャン時に見つからなかったことを記録済みです。</span>
     {% else %}
       <span class="muted">ファイルが見つかりません。</span>
     {% endif %}
@@ -47,7 +47,7 @@
 </dl>
 
 <section aria-labelledby="hints">
-  <h2 id="hints">PDF から抽出した識別子</h2>
+  <h2 id="hints">PDFから抽出した識別子</h2>
   {% if not inspection.file_available %}
     <p class="muted">ファイルを確認できないため、抽出した識別子はありません。</p>
   {% elif inspection.hints %}
@@ -88,7 +88,7 @@
 {% if not document.paper_id %}
 <section aria-labelledby="resolve">
   <h2 id="resolve">論文への関連付け</h2>
-  <p class="note">関連付けてもライブラリには追加しません。PDF と論文のどちらも削除しません。候補の内容を確認してから選んでください。</p>
+  <p class="note">関連付けてもライブラリには追加しません。PDFと論文のどちらも削除しません。候補の内容を確認してから選んでください。</p>
 
   {% if inspection.candidates %}
   <h3>候補の論文</h3>
@@ -112,7 +112,7 @@
 
   {% if importable_hints %}
   <h3>識別子から取り込む</h3>
-  <p class="hint">まだ論文がない識別子です。OpenAlex から取り込んで、この PDF に関連付けます。</p>
+  <p class="hint">登録済みの論文に一致しない識別子です。OpenAlexから論文を取り込み、このPDFに関連付けます。</p>
   <ul class="plain">
     {% for hint in importable_hints %}
     <li class="doc-candidate">
@@ -140,17 +140,17 @@
     </select>
     <label for="value">識別子</label>
     <input id="value" name="value" required>
-    <button type="submit">OpenAlex から取り込んで関連付ける</button>
+    <button type="submit">OpenAlexから取り込んで関連付ける</button>
   </form>
 
   <h3>タイトルから論文を探す</h3>
-  <p class="hint">検索は候補を示すだけで、自動では関連付けません。論文を作成したあと、その ID を下に入力してください。</p>
+  <p class="hint">検索は候補を示すだけで、自動では関連付けません。論文を作成したあと、その論文のIDを下に入力してください。</p>
   <p><a href="{{ url_for('paper_add') }}">論文を追加（タイトル検索）</a></p>
 
-  <h3>既存の論文 ID を指定して関連付ける</h3>
+  <h3>既存の論文IDを指定して関連付ける</h3>
   <form method="post" action="{{ url_for('document_link', document_id=document.id) }}" class="action-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label for="manual-paper-id">論文 ID（UUID）</label>
+    <label for="manual-paper-id">論文ID（UUID）</label>
     <input id="manual-paper-id" name="paper_id" required>
     <button type="submit">関連付ける</button>
   </form>
