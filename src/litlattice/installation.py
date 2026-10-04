@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from alembic.util.exc import CommandError
+from sqlalchemy.exc import SQLAlchemyError
 
 from litlattice.database import create_engine, upgrade_database
-from litlattice.errors import DatabaseNotInitialized
+from litlattice.errors import DatabaseMigrationFailed
 from litlattice.paths import resolve_db_path
 
 
@@ -17,16 +18,14 @@ class InitResult:
 
 
 def initialize(db_path: str | os.PathLike[str] | None = None) -> InitResult:
-    """Create the database. Safe to run repeatedly on the current schema."""
+    """Create or upgrade the database. Safe to repeat on the current schema."""
     resolved = resolve_db_path(db_path)
     resolved.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(resolved)
     try:
         upgrade_database(engine)
-    except CommandError as error:
-        raise DatabaseNotInitialized(
-            resolved, "Unsupported schema; recreate the database at a new path"
-        ) from error
+    except (CommandError, SQLAlchemyError) as error:
+        raise DatabaseMigrationFailed(resolved, str(error)) from error
     finally:
         engine.dispose()
     return InitResult(db_path=resolved)

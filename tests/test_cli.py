@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import sysconfig
@@ -13,6 +14,8 @@ from typer.testing import CliRunner
 
 from litlattice.cli import app
 from litlattice.database import alembic_config, create_engine
+from litlattice.installation import initialize
+from litlattice.papers import create_paper, list_papers
 
 runner = CliRunner()
 scripts_dir = Path(sysconfig.get_path("scripts"))
@@ -112,3 +115,39 @@ def test_init_with_env_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
 
     assert result.exit_code == 0, result.output
     assert db_path.is_file()
+
+
+def test_unknown_revision_is_refused_without_recreation(tmp_path: Path) -> None:
+    db_path = tmp_path / "unknown.db"
+    initialize(db_path)
+    engine = create_engine(db_path)
+    try:
+        create_paper(engine, title="Preserved sample")
+        before = list_papers(engine)
+        with engine.begin() as connection:
+            connection.execute(
+                text("UPDATE alembic_version SET version_num = 'unknown'")
+            )
+
+        listing = runner.invoke(app, ["--db", str(db_path), "paper", "list", "--json"])
+        assert listing.exit_code == 1
+        error = json.loads(listing.stdout)["error"]
+        assert error["type"] == "DatabaseNotInitialized"
+        assert "unknown" in error["message"]
+        assert "llat init" in error["message"]
+        assert "Back up" in error["message"]
+
+        result = runner.invoke(app, ["--db", str(db_path), "init", "--json"])
+        assert result.exit_code == 1
+        error = json.loads(result.stdout)["error"]
+        assert error["type"] == "DatabaseMigrationFailed"
+        assert "Can't locate revision" in error["message"]
+        assert "recreate" not in error["message"]
+        assert list_papers(engine) == before
+        with engine.connect() as connection:
+            assert (
+                MigrationContext.configure(connection).get_current_revision()
+                == "unknown"
+            )
+    finally:
+        engine.dispose()

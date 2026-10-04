@@ -21,6 +21,37 @@ llat --db /path/to/library.db paper list
 
 初期化済みのDBに対する `llat init` は再実行できる。
 
+## DBの更新・バックアップ・復元
+
+v0.1.0以降の正式リリースで作ったDBは、原則として後続の対応versionへmigrationで引き継ぐ。通常のversion upgradeでDBを削除・再作成する必要はない。自動migrationできない変更が必要な場合は、そのversionのrelease noteで移行方針を案内する。
+
+バックアップは、Webサーバーを終了し、CLIの実行をすべて完了させ、DBを使う外部ツールも閉じてから、DBファイルを別の場所へコピーして保管する。LitLatticeは通常のDELETE journal modeを使い、WALを有効にしない。この設定で正常終了したDBは、単一のDBファイルをコピーすればバックアップできる。DBにはPDFへのパスや関連を保存しており、PDFの実ファイルは含まれない。PDFも保全する場合は別にコピーする。
+
+以下は明示指定したDBの例。デフォルトDBを使う場合は、上記のXDG pathに置き換える。コピー先の既存バックアップを上書きしないよう、保存先を選ぶ。
+
+```bash
+# WebとすべてのCLIを正常終了してから実行
+cp /path/to/library.db /path/to/library-before-upgrade.db
+```
+
+バックアップ後にアプリを更新し、同じDB pathへ `llat init` を実行する。通常のCLI・Web起動はschemaを自動更新せず、headと一致しないDBの利用を拒否する。
+
+```bash
+llat --db /path/to/library.db init
+llat --db /path/to/library.db paper list
+```
+
+migrationに失敗した場合、変更が完全にrollbackされるとは限らない。DBとエラーを保全して原因を確認し、そのまま再実行を繰り返さない。必要なら、停止した状態で更新前のバックアップを元のDB pathへ戻す。元の状態を残したい場合は別の空いているpathへコピーし、`--db` で指定する。復元したrevisionに対応するアプリで利用するか、失敗原因を解消してから再び `llat init` で更新する。古いアプリによる自動downgradeは行わない。
+
+```bash
+# WebとすべてのCLIを停止してから、空いているpathへ復元する例
+cp /path/to/library-before-upgrade.db /path/to/restored-library.db
+# 復元したschemaに対応するアプリで確認する
+llat --db /path/to/restored-library.db paper list
+```
+
+実行中のDBコピーはこの手順の対象外。異常終了後に `-journal`・`-wal`・`-shm` が残っている場合は、それらを削除したり、DB本体だけをコピー・置換したりしない。DBとsidecarを一緒に保全してSQLiteの復旧手順を確認する。外部ツールでjournal modeを変更したDBも単一ファイルコピーの前提から外れる。オンラインbackup・自動backup・世代管理と専用コマンドは提供しない。
+
 ## PDFを認識して論文に関連付ける
 
 ```bash

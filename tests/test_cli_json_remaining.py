@@ -419,7 +419,7 @@ def test_paper_fetch_json_error(db: Path) -> None:
     assert _json(result)["error"]["type"] == "PaperNotFound"
 
 
-def test_init_reports_unsupported_schema_as_json(
+def test_init_reports_migration_failure_as_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from alembic.util.exc import CommandError
@@ -433,5 +433,7 @@ def test_init_reports_unsupported_schema_as_json(
     assert result.exit_code == 1
     payload = json.loads(result.stdout)
     assert payload["ok"] is False
-    assert payload["error"]["type"] == "DatabaseNotInitialized"
-    assert "new path" in payload["error"]["message"]
+    assert payload["error"]["type"] == "DatabaseMigrationFailed"
+    assert "Unknown revision" in payload["error"]["message"]
+    assert "inspect the migration error" in payload["error"]["message"]
+    assert "recreate" not in payload["error"]["message"]

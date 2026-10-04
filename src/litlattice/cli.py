@@ -284,7 +284,7 @@ def init(
         typer.Option("--json", "-j", help="Print a JSON envelope instead of text."),
     ] = False,
 ) -> None:
-    """Create the local database."""
+    """Create or upgrade the local database (back up existing data first)."""
     with _handle_errors(json_mode=json_output):
         result = initialize(ctx.obj)
     if json_output:

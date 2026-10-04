@@ -25,6 +25,8 @@ DocumentCopyへの取り込みでPaperの保存と関連付けを別々にcommit
 - Session外で使えない状態（attached ORM object、lazy load）をInterfaceへ返さない。必要な場合だけ小さなresult object（immutableなdataclass等）を返す。
 - 予期された失敗は、DBの例外をそのまま露出させずCore-levelのerrorとして返す。
 
+schema migrationの失敗時の保証は、通常のデータ変更とは区別し、[ADR 0001](0001-use-sqlalchemy-alembic-persistence.md#リリース済みdbの更新と復旧) に従う。
+
 ## Consequences
 
 - Interfaceは永続化の詳細を知らずにCoreを利用できる。
