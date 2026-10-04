@@ -4,7 +4,7 @@ CLIとローカルWeb UIは同じSQLiteデータベースを操作する。操�
 
 ## 起動とデータの場所
 
-リポジトリから利用する場合は `uv sync --locked` で準備し、以下のコマンドに `uv run` を付ける。install済みのCLI名は `llat` と `litlattice`。`python -m litlattice` でも同じCLIを起動できる。
+リポジトリから利用する場合は `uv sync --locked` で準備し、以下のコマンドに `uv run` を付ける。インストール済みのCLI名は `llat` と `litlattice`。`python -m litlattice` でも同じCLIを起動できる。
 
 ```bash
 llat --help
@@ -49,9 +49,9 @@ llat lib add <paper-id>
 llat lib remove <paper-id>
 ```
 
-import、search、fetch、expandとそれらに対応するWeb操作はOpenAlexと通信する。`OPENALEX_API_KEY` を設定できる。keyなしの利用枠は小さいため、大きな探索ではkeyが必要になる場合がある。keyをログやリポジトリに残さない。
+`import`、`search`、`fetch`、`expand` とそれらに対応するWeb操作はOpenAlexと通信する。`OPENALEX_API_KEY` を設定できる。API keyなしの利用枠は小さいため、大きな探索ではAPI keyが必要になる場合がある。API keyをログやリポジトリに残さない。
 
-searchは候補を表示するだけで保存しない。importは論文を取り込み、doc importはPDFとの関連付けも行う。Libraryへの登録は `lib add` またはWebで明示的に行う。fetchは既存のtitle・出版年を上書きせず、不足分を補う。
+searchは候補を表示するだけで保存しない。importは論文を取り込み、doc importはPDFとの関連付けも行う。Libraryへの登録は `lib add` またはWebで明示的に行う。fetchは既存のタイトル・出版年を上書きせず、不足分を補う。
 
 ## 引用探索とグラフ
 
@@ -76,9 +76,9 @@ llat serve --port 8080
 
 常に `127.0.0.1` で待ち受け、debugは無効。認証を持たないローカル用サーバーであり、外部ネットワークへ公開しない。
 
-「論文を追加」で識別子から取り込むか、タイトル検索の候補を確認して追加する。「PDF」で手がかりを確認し、候補やUUIDから関連付け、取り込み、解除を行う。論文詳細からmetadata取得、expand、Library操作と周辺グラフの表示ができる。Source登録とscanはCLIで行う。
+「論文を追加」で識別子から取り込むか、タイトル検索の候補を確認して追加する。「PDF」で手がかりを確認し、候補やUUIDから関連付け、取り込み、解除を行う。論文の詳細では、メタデータの取得、expand、Library操作、周辺グラフの表示ができる。Source登録とscanはCLIで行う。
 
-状態変更はCSRFで保護したPOSTを使う。サーバー再起動後や、ページを開いて1時間を超えた後は、form送信前にページを再読み込みする。
+状態変更はCSRFで保護したPOSTを使う。サーバー再起動後や、ページを開いて1時間を超えた後は、フォーム送信前にページを再読み込みする。
 
 ## 現在の制限
 
@@ -90,16 +90,16 @@ llat serve --port 8080
 
 ## JSON出力
 
-`serve` を除くデータ操作コマンドは `--json`（`-j`）を持つ。stdoutは1つのJSON envelopeだけとし、従来の人間向け表示は引数を付けない場合に維持する。
+`serve` を除くデータ操作コマンドは `--json`（`-j`）を持つ。標準出力には1つのJSONオブジェクトだけを返す。`--json` を付けない場合は、人間向けの表示を使う。
 
 - 成功: `ok: true`、`data`、`warnings`
 - 想定されたCoreエラー: `ok: false`、`error.type`、`error.message` とexit code 1
-- CLIの引数解析エラーはstderrとexit code 2。JSON envelopeにはしない
-- 曖昧・未確認の結果は成功envelopeの `data.status` と `warnings` で表す。成功が必ず保存を意味するわけではない
+- CLIの引数解析エラーはstderrとexit code 2。JSONオブジェクトにはしない
+- 曖昧・未確認の結果は成功時のJSONオブジェクトの `data.status` と `warnings` で表す。成功が必ず保存を意味するわけではない
 
-v1.0以前はJSONの後方互換性を保証しない。独立したschema versionは持たず、同じ製品version内では一貫した構造にする。各コマンドの実際の出力を確認してscriptで使う。
+v1.0以前はJSONの後方互換性を保証しない。独立したschema versionは持たず、同じ製品version内では一貫した構造にする。各コマンドの実際の出力を確認してスクリプトで使う。
 
-UUID・日時・enumは共通serializerで文字列へ変換し、Core resultのフィールド名を使う。
+UUID・日時・enumは共通のシリアライザーで文字列へ変換し、Coreの結果データのフィールド名を使う。
 
 ```json
 {"ok": true, "data": {"paper_id": "<UUID>", "added": true}, "warnings": []}

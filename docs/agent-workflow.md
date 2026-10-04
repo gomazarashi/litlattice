@@ -2,11 +2,11 @@
 
 ## 役割
 
-このプロジェクトではCodexを上位エージェント、OpenCodeを下位実装エージェントとする。ユーザーの指示を優先し、[AGENTS](../AGENTS.md) と [仕様](spec.md) を守る。
+このプロジェクトではCodexが作業全体を管理し、OpenCodeが委譲された実装を担当する。ユーザーの指示を優先し、[AGENTS](../AGENTS.md) と [仕様](spec.md) を守る。
 
-Codexがコードと文書を調べ、schema・API・作業範囲を決める。OpenCodeには狭く具体的な実装を委譲する。Codexは報告だけで完了とせず、実際のdiffと必要な検証を確認する。
+Codexがコードと文書を調べ、スキーマ・API・作業範囲を決める。OpenCodeには範囲を絞った具体的な実装を委譲する。CodexはOpenCodeの報告に加え、実際の差分と必要な検証結果を確認して完了とする。
 
-branch作成・切替、commit、push、merge、rebase、reset、stash、tag、PR作成などGit履歴操作はCodexだけが行う。OpenCodeに許可するGit操作は読み取り用のstatus・diffなどに限る。
+ブランチの作成・切替、commit、push、merge、rebase、reset、stash、tag、PR作成などのGit履歴操作はCodexだけが行う。OpenCodeに許可するGit操作は読み取り用のstatus・diffなどに限る。
 
 ## 委譲
 
@@ -14,14 +14,14 @@ branch作成・切替、commit、push、merge、rebase、reset、stash、tag、P
 opencode run --auto --print-logs --log-level INFO "<具体的なタスク>" < /dev/null
 ```
 
-委譲promptには目的、編集可能・禁止ファイル、決定済みAPI/schema、不変条件、必要なテスト、最後の確認、Git操作の禁止を明記する。未決事項を独断で設計させない。並列実行は編集対象が重ならない場合だけ使い、schemaの変更完了前に依存するCore変更を始めない。
+委譲時のプロンプトには、目的、編集可能なファイルと編集禁止のファイル、決定済みのAPI・スキーマ、不変条件、必要なテスト、最後の確認、Git操作の禁止を明記する。未決事項を独断で設計させない。並列実行は編集対象が重ならない場合だけ使う。スキーマの変更が完了してから、そのスキーマに依存するCoreの変更を始める。
 
 - `--auto` で起動する。使えるオプションは `opencode run --help` で確認する
 - stdinを使わない実行では `< /dev/null` でEOFを渡す
-- 出力が止まったらログ・プロセス・diffで通信待ちや権限待ちを調べる。同じ指示を無条件に再実行しない
+- 出力が止まったらログ・プロセス・差分で通信待ちや権限待ちを調べる。同じ指示を無条件に再実行しない
 - 長い作業は節目で確認済みの結果と残る作業を日本語で報告する
 - 未完了の実作業は [TODO](../TODO.md)、利用者向け変更は [CHANGELOG](../CHANGELOG.md) に記録する
 
 ## Skill
 
-Skillは開発の補助でありruntime dependencyではない。簡素化の助言で不要な抽象化を見直しても、ユーザーが指定した不変条件、CSRF、必要な検証は省かない。利用するSkillはタスクに応じて選ぶ。
+Skillは開発を補助するもので、実行時の依存には含まれない。簡素化の助言で不要な抽象化を見直しても、ユーザーが指定した不変条件、CSRF、必要な検証は省かない。利用するSkillはタスクに応じて選ぶ。
