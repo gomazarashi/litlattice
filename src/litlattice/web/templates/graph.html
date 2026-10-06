@@ -3,7 +3,7 @@
 {% block main_attrs %} class="wide"{% endblock %}
 {% block content %}
 <h1>引用グラフ</h1>
-<p class="note">Library（ライブラリ）に登録した論文と、それらの間の引用を表示します。矢印 <strong>A → B</strong> は「A が B を引用している」ことを表します。ノードの大きさは、このグラフの中での PageRank（重要度）です。</p>
+<p class="note">ライブラリに登録した論文と、それらの間の引用を表示します。矢印 <strong>A → B</strong> は「AがBを引用している」ことを表します。ノードの大きさは、このグラフの中でのPageRank（重要度）です。</p>
 {% if graph.nodes %}
 {% include "_graph_view.html" %}
 {% else %}

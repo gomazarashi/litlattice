@@ -19,7 +19,7 @@ from enum import StrEnum
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from litlattice.documents import link_document
+from litlattice.documents import _link
 from litlattice.errors import DocumentNotFound, WorkNotFound
 from litlattice.expand import _normalized
 from litlattice.identity import (
@@ -29,7 +29,7 @@ from litlattice.identity import (
 )
 from litlattice.models import DocumentCopy
 from litlattice.papers import Identifier, _normalize_all
-from litlattice.providers import PaperProvider
+from litlattice.providers import PaperProvider, ProviderWork
 
 
 class ImportStatus(StrEnum):
@@ -83,6 +83,14 @@ def import_paper(
     if work is None:
         raise WorkNotFound(normalized)
 
+    with Session(engine) as session, session.begin():
+        return _apply_provider_work(session, work, normalized)
+
+
+def _apply_provider_work(
+    session: Session, work: ProviderWork, normalized: tuple[Identifier, ...]
+) -> ImportResult:
+    """Confirm and apply a provider result in the caller's transaction."""
     work_identifiers = _normalized(work.identifiers)
     input_keys = {(i.scheme, i.normalized_value) for i in normalized}
     work_keys = {(i.scheme, i.normalized_value) for i in work_identifiers}
@@ -101,40 +109,39 @@ def import_paper(
     ignored = tuple(
         i for i in normalized if (i.scheme, i.normalized_value) not in work_keys
     )
-    with Session(engine) as session, session.begin():
-        resolution = resolve_in_session(session, work_identifiers)
-        if resolution.status is ResolutionStatus.ambiguous:
-            return ImportResult(
-                status=ImportStatus.ambiguous,
-                paper_id=None,
-                title=work.title,
-                publication_year=work.publication_year,
-                identifiers=resolution.identifiers,
-                identifiers_added=(),
-                identifiers_ignored=ignored,
-                candidate_paper_ids=resolution.candidate_paper_ids,
-            )
-        paper_id = materialize_paper(
-            session,
-            resolution,
-            title=work.title,
-            publication_year=work.publication_year,
-        )
-        status = (
-            ImportStatus.created
-            if resolution.status is ResolutionStatus.new
-            else ImportStatus.matched
-        )
+    resolution = resolve_in_session(session, work_identifiers)
+    if resolution.status is ResolutionStatus.ambiguous:
         return ImportResult(
-            status=status,
-            paper_id=paper_id,
+            status=ImportStatus.ambiguous,
+            paper_id=None,
             title=work.title,
             publication_year=work.publication_year,
             identifiers=resolution.identifiers,
-            identifiers_added=resolution.unassigned,
+            identifiers_added=(),
             identifiers_ignored=ignored,
             candidate_paper_ids=resolution.candidate_paper_ids,
         )
+    paper_id = materialize_paper(
+        session,
+        resolution,
+        title=work.title,
+        publication_year=work.publication_year,
+    )
+    status = (
+        ImportStatus.created
+        if resolution.status is ResolutionStatus.new
+        else ImportStatus.matched
+    )
+    return ImportResult(
+        status=status,
+        paper_id=paper_id,
+        title=work.title,
+        publication_year=work.publication_year,
+        identifiers=resolution.identifiers,
+        identifiers_added=resolution.unassigned,
+        identifiers_ignored=ignored,
+        candidate_paper_ids=resolution.candidate_paper_ids,
+    )
 
 
 @dataclass(frozen=True)
@@ -157,28 +164,41 @@ def import_paper_for_document(
 ) -> DocumentImportResult:
     """Import the Paper for a work and link a DocumentCopy to it.
 
-    The document's existence is checked first, so a wrong ID fails without
-    contacting the provider (``DocumentNotFound``). The import itself behaves
+    After identifier validation, the document's existence is checked so a
+    wrong ID fails without contacting the provider (``DocumentNotFound``).
+    The import itself behaves
     exactly like :func:`import_paper` (``WorkNotFound``, ``InvalidIdentifier``
     and so on pass through unchanged). Only when it resolves to one Paper
     (``created`` / ``matched``) is the document linked, as if by
     :func:`litlattice.documents.link_document`.
 
-    The import and the link are separate transactions: if linking fails after
-    the import, the imported Paper remains without a link, which is a valid
-    state rather than an inconsistency. The Library is never touched.
+    After the short existence check, the provider is contacted outside any
+    transaction. The document is checked again before applying the work and
+    linking it in one write transaction. Any failure rolls back both changes.
+    The Library is never touched.
     """
+    normalized = tuple(_normalize_all(identifiers))
+    if not normalized:
+        raise ValueError("at least one identifier is required")
+
     with Session(engine) as session, session.begin():
         if session.get(DocumentCopy, document_id) is None:
             raise DocumentNotFound(document_id)
 
-    result = import_paper(engine, provider, identifiers)
-    linked = False
-    if result.status in (ImportStatus.created, ImportStatus.matched):
-        linked = link_document(engine, document_id, result.paper_id)
-    return DocumentImportResult(
-        document_id=document_id, import_result=result, linked=linked
-    )
+    work = provider.lookup_work([(i.scheme, i.normalized_value) for i in normalized])
+    if work is None:
+        raise WorkNotFound(normalized)
+
+    with Session(engine) as session, session.begin():
+        if session.get(DocumentCopy, document_id) is None:
+            raise DocumentNotFound(document_id)
+        result = _apply_provider_work(session, work, normalized)
+        linked = False
+        if result.status in (ImportStatus.created, ImportStatus.matched):
+            linked = _link(session, result.paper_id, document_id)
+        return DocumentImportResult(
+            document_id=document_id, import_result=result, linked=linked
+        )
 
 
 class CandidateStatus(StrEnum):

@@ -258,8 +258,9 @@ def test_usage_page_explains_concepts_and_commands(
     html = _html(client, "/usage")
 
     assert "<h1>使い方</h1>" in html
-    assert "論文 A が論文 B を引用している" in html
-    assert "citation add" in html
+    assert "論文Aが論文Bを引用している" in html
+    assert 'llat --db "$DB" citation add 引用元ID 引用先ID' in html
+    assert 'llat --db "$DB" path 始点ID 終点ID' in html
     assert f"DB={db_path}" in html
     assert 'href="/usage" aria-current="page"' in html
 

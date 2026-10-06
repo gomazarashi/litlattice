@@ -2,7 +2,7 @@
 {% block title %}論文を追加{% endblock %}
 {% block content %}
 <h1>論文を追加</h1>
-<p class="note">OpenAlex から論文を取り込みます。取り込んでもライブラリには追加しません。追加は論文の詳細ページで行います。</p>
+<p class="note">OpenAlexから論文を取り込みます。取り込んでもライブラリには追加しません。ライブラリへの追加は論文の詳細ページで行います。</p>
 
 <section aria-labelledby="import-by-identifier">
   <h2 id="import-by-identifier">識別子から取り込む</h2>
@@ -16,7 +16,7 @@
     </select>
     <label for="value">識別子</label>
     <input id="value" name="value" required>
-    <button type="submit">OpenAlex から取り込む</button>
+    <button type="submit">OpenAlexから取り込む</button>
   </form>
 </section>
 
@@ -25,7 +25,7 @@
   <form method="get" action="{{ url_for('paper_add') }}" class="action-form" data-busy-label="通信中…">
     <label for="q">タイトル</label>
     <input id="q" name="q" type="search" value="{{ query }}">
-    <button type="submit">OpenAlex で検索</button>
+    <button type="submit">OpenAlexで検索</button>
   </form>
   <p class="muted" data-busy-status role="status"></p>
   <p class="note">検索は候補を示すだけで、何も保存しません。候補の「取り込む」を押したときだけ論文を作ります。</p>

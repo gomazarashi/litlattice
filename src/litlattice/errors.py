@@ -18,8 +18,19 @@ class LitLatticeError(Exception):
 class DatabaseNotInitialized(LitLatticeError):
     def __init__(self, db_path: Path, detail: str) -> None:
         super().__init__(
-            f"{detail}: {db_path}. Use `llat init` to create a database. "
-            "Older development databases must be recreated at a new path."
+            f"{detail}: {db_path}. Use `llat init` with the same DB path to create "
+            "or upgrade the database. Back up an existing database first."
+        )
+        self.db_path = db_path
+
+
+class DatabaseMigrationFailed(LitLatticeError):
+    def __init__(self, db_path: Path, detail: str) -> None:
+        super().__init__(
+            f"Database migration failed: {db_path}. {detail}. "
+            "Keep the database and inspect the migration error before retrying. "
+            "A complete rollback is not guaranteed; see docs/usage.md for backup "
+            "and restore instructions."
         )
         self.db_path = db_path
 

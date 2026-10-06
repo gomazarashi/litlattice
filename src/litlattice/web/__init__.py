@@ -183,14 +183,14 @@ def _flash_metadata_result(result: MetadataResult) -> None:
             filled.append("出版年")
         if filled:
             flash(
-                "OpenAlex から metadata を取得しました（"
+                "OpenAlexからメタデータを取得しました。"
                 + "・".join(filled)
-                + "を補いました）。",
+                + "を補いました。",
                 "success",
             )
         else:
             flash(
-                "OpenAlex から metadata を取得しました（新しく補った項目はありません）。",
+                "OpenAlexからメタデータを取得しました。新しく補った項目はありません。",
                 "success",
             )
         if result.identifiers_added:
@@ -200,8 +200,8 @@ def _flash_metadata_result(result: MetadataResult) -> None:
             )
     elif result.status is MetadataStatus.unconfirmed:
         flash(
-            "OpenAlex の記録がこの論文と識別子を共有していないため、"
-            "同じ論文と確認できませんでした。metadata は適用していません。",
+            "OpenAlexの記録とこの論文に共通の識別子がないため、"
+            "同じ論文と確認できませんでした。メタデータは適用していません。",
             "warning",
         )
     else:
@@ -584,7 +584,7 @@ def create_app(
             )
         if result.seed_metadata.status is MetadataStatus.unconfirmed:
             flash(
-                "OpenAlex の記録がこの論文と識別子を共有していないため、"
+                "OpenAlexの記録とこの論文に共通の識別子がないため、"
                 "同じ論文と確認できませんでした。何も保存していません。",
                 "warning",
             )

@@ -6,7 +6,7 @@
 
 開発用Pythonは `.python-version` に指定した3.13系を使う。利用者向けの対応範囲は `pyproject.toml` の `requires-python` が正本であり、CIは最低対応の3.12系と開発用3.13系を確認する。開発用の指定と対応範囲を同一視しない。
 
-現在の下限にはNetworkXと、Coreで使う `sqlite3.Connection.autocommit` の要件がある。Python 3.14.1の除外はNetworkXの [既知の不具合への対処](https://github.com/networkx/networkx/pull/8372) に合わせたもの。対応範囲は変更せず、例外条件を他の文書へ繰り返し書かない。
+Pythonの対応versionの下限は、NetworkXとCoreで使う `sqlite3.Connection.autocommit` の要件に合わせている。Python 3.14.1の除外はNetworkXの [既知の不具合への対処](https://github.com/networkx/networkx/pull/8372) に合わせたもの。対応範囲は変更せず、例外条件を他の文書へ繰り返し書かない。
 
 ```bash
 uv sync --locked
@@ -14,10 +14,10 @@ uv run llat --help
 uv run llat --version
 ```
 
-通常はlockを変更せず、リポジトリと同じ依存構成を使う。`.venv/` はコミットせず、`uv.lock` と `.python-version` は管理する。CLIとCoreの開発にGUIや特定IDEは必要ない。
+通常は `uv.lock` を変更せず、リポジトリで固定した依存構成を使う。`.venv/` はコミットせず、`uv.lock` と `.python-version` は管理する。CLIとCoreの開発にGUIや特定IDEは必要ない。
 
-- `pyproject.toml`: Pythonの対応範囲、依存の互換性条件、build backendの正本
-- `uv.lock`: 開発・CIで実際に使う具体的な依存versionの正本
+- `pyproject.toml`: Pythonの対応範囲、依存の互換性条件、ビルドバックエンドの正本
+- `uv.lock`: 開発・CIで実際に使う依存のversionの正本
 - `.python-version`: ローカル開発で選ぶPythonのminor version
 
 依存の追加・更新を意図した場合だけ以下を使い、差分と必要な検証を確認する。
@@ -29,11 +29,11 @@ uv lock --upgrade-package <package>
 uv sync --locked
 ```
 
-依存の下限は必要なAPI・修正、上限は既知の互換性上の理由で決める。現在の下限は旧版での検証をせずに機械的に下げない。全依存に一律の上限を付けず、導入時のversionだけを理由に更新もしない。追加時は用途、Python対応、ライセンス、保守状況、代替手段を確認する。
+依存の下限は必要なAPI・修正、上限は既知の互換性上の理由で決める。依存のversionの下限を下げる場合は、旧版での動作を検証する。すべての依存に一律の上限を付けない。導入時のversionだけを理由に更新することもない。追加時は用途、Python対応、ライセンス、保守状況、代替手段を確認する。
 
 現在のProvider通信は標準ライブラリの `urllib` を使う（ADR 0003）。PageRankはnumpy/scipyを追加せず `litlattice.graph` で計算し、NetworkXの参照実装との一致をテストする。これらの実装判断を変更する場合も、CoreとProviderの境界や指標の意味を維持する。
 
-プロジェクトのライセンスは未定。決定時は依存ライブラリとの適合を確認する。
+プロジェクトのライセンスは [LICENSE](../LICENSE)、採用理由と依存・配布形態の確認結果は [ADR 0006](decisions/0006-project-license.md) を参照する。
 
 ## 検証
 
@@ -53,11 +53,11 @@ CoreはInterfaceから独立してテストする。Providerにはfakeを注入�
 
 PDFは通常 `tests/pdf_factory.py` で生成する。生成データでは不具合を再現できない場合は、小さなバイナリfixtureを許可する。不要な内容・個人情報を含めず、出所と再現する問題を記録する。
 
-CIはPRなしでも作業branchへのpushで動く。文書だけの変更は文書チェックを実行し、コード・設定変更とmain・developへの統合ではPython 3.12/3.13の全チェックを実行する。手動実行も全チェックの対象となる（workflowがdefault branchへ反映された後に利用可能）。実行条件とPython matrixの正本は `.github/workflows/ci.yml` とする。ローカルの確認を毎回すべてのPythonで繰り返す必要はない。
+CIはPRを作成していなくても、作業ブランチへのpushで実行される。文書だけの変更は文書チェックを実行し、コード・設定変更とmain・developへの統合ではPython 3.12/3.13の全チェックを実行する。手動実行も全チェックの対象となる（workflowがdefault branchへ反映された後に利用可能）。実行条件とPythonの検証versionの組み合わせの正本は `.github/workflows/ci.yml` とする。ローカルの確認を毎回すべてのPythonで繰り返す必要はない。
 
 ## DBとmigration
 
-SQLAlchemyとAlembicを使う。新規DBもAlembic migrationで作り、`create_all()`を使わない（ADR 0001）。migrationはpackage resourceとして配布し、install後も `llat init` で適用できるようにする。
+SQLAlchemyとAlembicを使う。新規DBもAlembic migrationで作り、`create_all()`を使わない（ADR 0001）。migrationはパッケージに同梱し、インストール後も `llat init` で適用できるようにする。
 
 ```bash
 export LITLATTICE_DB=/tmp/litlattice-dev.db
@@ -67,11 +67,17 @@ uv run alembic revision --autogenerate -m "..."
 uv run alembic upgrade head
 ```
 
-autogenerateは補助であり、生成したmigrationはレビューする。schema変更時はモデルとの一致と配布物からの新規DB作成を確認する。
+schema変更にはAlembic migrationを追加し、自動生成した内容は必ずレビューする。リリース済みrevisionの内容やupgrade pathを壊さない。更新・失敗時の保証は [ADR 0001](decisions/0001-use-sqlalchemy-alembic-persistence.md#リリース済みdbの更新と復旧)、実データの更新とバックアップ手順は [利用ガイド](usage.md#dbの更新バックアップ復元) に従う。
+
+現在はv0.1.0のrevision `0001` だけなので、架空のmigrationは追加しない。新規DBのhead適用、既存データを含む再実行、未適用・未知のrevisionの通常open拒否、明示的なinit後のopen、migrationエラーの案内、モデルとの一致をテストする。
+
+2つ目以降のrevisionを追加したら、v0.1.0のschema fixtureまたはrevision `0001` を起点に既存データを投入し、headへのupgrade後もPaper・識別子・Library登録・Citation・Source・DocumentCopyの値と関連が保持される回帰テストを必須とする。以降のリリース済みschemaについても、その変更で影響を受けるupgrade pathを確認する。
+
+migration resourceはinstalled packageから利用できなければならない。schema変更時はモデルとの一致に加え、wheel・sdistへの `migrations/env.py`、`versions/`、`script.py.mako` の同梱と、wheelを一時環境にインストールした後の新規DB作成を確認する。配布物のinstall smoke testをCIへ追加する作業は [TODO](../TODO.md) に残す。
 
 ## Webの開発
 
-templateとstatic fileは `src/litlattice/web/` にpackage resourceとして置く。画面の操作確認は変更した流れと対象画面で行う。
+テンプレートと静的ファイルは `src/litlattice/web/` に置き、パッケージに同梱する。画面の操作確認は変更した流れと対象画面で行う。
 
 - 外部CDNやweb fontを使わず、JavaScript依存はversion・ライセンス・入手元を記録して同梱する
 - 現在Node.jsのビルド工程は使わない。必要性が生じたら開発・配布の負担と効果を評価する（ADR 0004）
@@ -81,7 +87,7 @@ templateとstatic fileは `src/litlattice/web/` にpackage resourceとして置�
 
 ## Gitとリリース
 
-versionは `pyproject.toml` の `[project] version` が正本。CLIはpackage metadataから表示する。feature branchごとには上げず、リリース単位で更新する。PATCHは互換性を保つ修正、MINORは機能追加、安定版以降の互換性破壊はMAJORとする。
+versionは `pyproject.toml` の `[project] version` が正本。CLIはpackage metadataから表示する。作業ブランチごとには上げず、リリース単位で更新する。PATCHは互換性を保つ修正、MINORは機能追加、安定版以降の互換性破壊はMAJORとする。
 
 - `main`: リリース済み。annotated tagはmainのcommitに付ける
 - `develop`: 次回リリースへ向けた統合先
@@ -91,7 +97,7 @@ versionは `pyproject.toml` の `[project] version` が正本。CLIはpackage me
 - commitは論理的な単位に分け、日本語のメッセージを使う
 - 作業branchはmerge後に削除する。未pushの変更、open PR、別worktreeでの使用がなく、統合先へ取り込まれていることを確認する
 
-CHANGELOGは利用者向けの振る舞い、互換性、移行、重要な開発環境の変更を記録する。誤字修正・リンク修正・内部的な文書整理はGit履歴で追えるため、変更ごとに追記を要求しない。`Unreleased`を残し、リリース時に日付付きのversionへ移す。分類はAdded / Changed / Fixed / Security等から必要なものだけ使う。GitHub Releasesは任意。
+CHANGELOGは利用者向けの振る舞い、互換性、移行、重要な開発環境の変更を記録する。誤字修正・リンク修正・内部的な文書整理はGit履歴で追えるため、変更ごとに追記を要求しない。`Unreleased`を残し、リリース時に日付付きのversionへ移す。分類はAdded / Changed / Fixed / Security等から必要なものだけ使う。GitHub Releasesの作成は任意。
 
 1. リリース内容を確定し、version・lockのproject metadata・CHANGELOG・TODOを更新してdevelopへ統合する。既存の作業PRに含めてよく、専用のrelease準備branchは必須としない
 2. developの全CI成功後、develop → mainのリリースPRを作り、主な変更・検証・制限を記載する
@@ -105,7 +111,7 @@ git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin vX.Y.Z
 ```
 
-リリース済みのTODOは次の整理時に除き、履歴はCHANGELOGに残す。記録だけのためにpost-release branchを必須としない。
+リリース済みのTODOは次の整理時に除き、履歴はCHANGELOGに残す。記録のためだけにリリース後の専用ブランチを作る必要はない。
 
 ## 文書の更新
 

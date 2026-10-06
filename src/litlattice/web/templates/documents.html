@@ -3,7 +3,7 @@
 {% block title %}PDF{% endblock %}
 {% block content %}
 <h1>PDF</h1>
-<p class="note">登録されている PDF（DocumentCopy）の一覧です。表示は scan の結果で、ファイルの移動やライブラリへの追加は行いません。</p>
+<p class="note">登録済みPDFの一覧です。スキャン結果を表示します。ファイルの移動やライブラリへの追加は行いません。</p>
 
 <p class="filter-links">
   <a href="{{ url_for('documents') }}" {% if not unlinked %}aria-current="page"{% endif %}>すべて</a>
@@ -41,8 +41,8 @@
   </table>
 </div>
 {% elif unlinked %}
-<p class="muted">未関連付けの PDF はありません。</p>
+<p class="muted">未関連付けのPDFはありません。</p>
 {% else %}
-<p class="muted">PDF が登録されていません。CLI で Source を登録して scan してください。</p>
+<p class="muted">PDFが登録されていません。CLIでPDFフォルダを登録し、スキャンしてください。</p>
 {% endif %}
 {% endblock %}

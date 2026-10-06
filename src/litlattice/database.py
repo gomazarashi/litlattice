@@ -47,7 +47,7 @@ def alembic_config() -> Config:
 
 
 def upgrade_database(engine: Engine) -> None:
-    """Apply all pending migrations (``alembic upgrade head``)."""
+    """Apply pending migrations; sqlite3 legacy mode may leave DDL on failure."""
     config = alembic_config()
     with engine.begin() as connection:
         config.attributes["connection"] = connection

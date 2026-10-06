@@ -1,8 +1,13 @@
 [project]
 name = "litlattice"
-version = "0.1.0"
+version = "0.1.1"
 description = "A literature management system for organizing research papers and exploring citation graphs."
 readme = "README.md"
+license = "MIT"
+license-files = [
+    "LICENSE",
+    "src/litlattice/web/static/vendor/cytoscape/LICENSE",
+]
 requires-python = ">=3.12,!=3.14.1"
 dependencies = [
     "alembic>=1.20.0",
