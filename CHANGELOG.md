@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+## v0.1.1 - 2026-10-06
+
 ### Added
 
 - プロジェクトのライセンスをMIT Licenseとして明確化し、wheel・sdistにもライセンス情報を同梱。
